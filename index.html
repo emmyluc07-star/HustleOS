@@ -335,14 +335,30 @@
             btn.style.borderColor = "var(--neon-red)"; 
             btn.style.color = "var(--neon-red)";
             
-            // Test notification (wrapped in try-catch)
+            // Test notification (mobile-optimized)
             try {
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification('🚨 HUSTLE OS TEST ALARM', {
-                        body: 'This is a test alarm notification',
-                        icon: './favicon-32x32.png',
-                        vibrate: [200, 100, 200]
-                    });
+                if ('Notification' in window) {
+                    if (Notification.permission === 'granted') {
+                        new Notification('🚨 HUSTLE OS TEST ALARM', {
+                            body: 'This is a test alarm notification',
+                            icon: './favicon-32x32.png',
+                            tag: 'hustle-test',
+                            requireInteraction: true,
+                            vibrate: [200, 100, 200, 100, 200]
+                        });
+                    } else if (Notification.permission === 'default') {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === 'granted') {
+                                new Notification('🚨 HUSTLE OS TEST ALARM', {
+                                    body: 'This is a test alarm notification',
+                                    icon: './favicon-32x32.png',
+                                    tag: 'hustle-test',
+                                    requireInteraction: true,
+                                    vibrate: [200, 100, 200, 100, 200]
+                                });
+                            }
+                        });
+                    }
                 }
             } catch(e) {
                 console.log('Notification error:', e);
@@ -466,14 +482,31 @@
                         btn.style.borderColor = "var(--neon-red)"; 
                         btn.style.color = "var(--neon-red)";
                         
-                        // Send notification (with error handling)
+                        // Send notification (with mobile-specific handling)
                         try {
-                            if ('Notification' in window && Notification.permission === 'granted') {
-                                new Notification('🚨 HUSTLE OS ALARM', {
-                                    body: `Task ended: ${miniTask.title}`,
-                                    icon: './favicon-32x32.png',
-                                    vibrate: [200, 100, 200]
-                                });
+                            if ('Notification' in window) {
+                                if (Notification.permission === 'granted') {
+                                    new Notification('🚨 HUSTLE OS ALARM', {
+                                        body: `Task ended: ${miniTask.title}`,
+                                        icon: './favicon-32x32.png',
+                                        tag: 'hustle-alarm',
+                                        requireInteraction: true,
+                                        vibrate: [200, 100, 200, 100, 200]
+                                    });
+                                } else if (Notification.permission === 'default') {
+                                    // Request permission on mobile
+                                    Notification.requestPermission().then(permission => {
+                                        if (permission === 'granted') {
+                                            new Notification('🚨 HUSTLE OS ALARM', {
+                                                body: `Task ended: ${miniTask.title}`,
+                                                icon: './favicon-32x32.png',
+                                                tag: 'hustle-alarm',
+                                                requireInteraction: true,
+                                                vibrate: [200, 100, 200, 100, 200]
+                                            });
+                                        }
+                                    });
+                                }
                             }
                         } catch(e) {
                             console.log('Notification error (ignored):', e);
@@ -496,14 +529,31 @@
                         btn.style.borderColor = "var(--neon-red)"; 
                         btn.style.color = "var(--neon-red)";
                         
-                        // Send notification (with error handling)
+                        // Send notification (with mobile-specific handling)
                         try {
-                            if ('Notification' in window && Notification.permission === 'granted') {
-                                new Notification('🚨 HUSTLE OS ALARM', {
-                                    body: `Task ended: ${mainTask.title}`,
-                                    icon: './favicon-32x32.png',
-                                    vibrate: [200, 100, 200]
-                                });
+                            if ('Notification' in window) {
+                                if (Notification.permission === 'granted') {
+                                    new Notification('🚨 HUSTLE OS ALARM', {
+                                        body: `Task ended: ${mainTask.title}`,
+                                        icon: './favicon-32x32.png',
+                                        tag: 'hustle-alarm',
+                                        requireInteraction: true,
+                                        vibrate: [200, 100, 200, 100, 200]
+                                    });
+                                } else if (Notification.permission === 'default') {
+                                    // Request permission on mobile
+                                    Notification.requestPermission().then(permission => {
+                                        if (permission === 'granted') {
+                                            new Notification('🚨 HUSTLE OS ALARM', {
+                                                body: `Task ended: ${mainTask.title}`,
+                                                icon: './favicon-32x32.png',
+                                                tag: 'hustle-alarm',
+                                                requireInteraction: true,
+                                                vibrate: [200, 100, 200, 100, 200]
+                                            });
+                                        }
+                                    });
+                                }
                             }
                         } catch(e) {
                             console.log('Notification error (ignored):', e);
