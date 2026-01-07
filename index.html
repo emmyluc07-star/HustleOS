@@ -319,6 +319,11 @@
                 return;
             }
             
+            if(alarmTriggered) {
+                alert('Alarm already active! Please silence it first.');
+                return;
+            }
+            
             // Force trigger alarm
             alarmTriggered = true;
             playSynthAlarm();
@@ -536,9 +541,20 @@
             document.getElementById('main-btn').style.background = "rgba(0,255,65,0.1)";
         }
         
-        // Register service worker for PWA
+        // Register service worker for PWA with auto-update
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js');
+            navigator.serviceWorker.register('./sw.js').then(registration => {
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New update available, reload page
+                            console.log('🔄 New version available, reloading...');
+                            window.location.reload();
+                        }
+                    });
+                });
+            });
         }
     </script>
 </body>
