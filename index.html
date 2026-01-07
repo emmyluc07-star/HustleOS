@@ -25,8 +25,30 @@
         /* --- KEEP YOUR EXISTING CSS (I added Edit Button styles below) --- */
         :root { --bg-color: #000; --neon-green: #00ff41; --neon-red: #ff003c; --neon-blue: #00f3ff; --font-main: 'Courier New', monospace; }
         body { background: var(--bg-color); color: #fff; font-family: var(--font-main); margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 30px 30px; }
-        .red-alert-mode { animation: flash-red 0.8s infinite; border: 4px solid var(--neon-red); }
-        @keyframes flash-red { 0%, 100% { border-color: transparent; } 50% { border-color: var(--neon-red); } }
+        .red-alert-mode { 
+            animation: flash-red 0.6s infinite, shake 0.1s infinite;
+            border: 4px solid var(--neon-red);
+            box-shadow: inset 0 0 50px rgba(255, 0, 60, 0.3), 0 0 30px rgba(255, 0, 60, 0.8);
+        }
+        @keyframes flash-red { 
+            0% { border-color: var(--neon-red); box-shadow: inset 0 0 50px rgba(255, 0, 60, 0.3), 0 0 30px rgba(255, 0, 60, 0.8); } 
+            25% { border-color: #ff6666; box-shadow: inset 0 0 80px rgba(255, 0, 60, 0.5), 0 0 50px rgba(255, 0, 60, 1); } 
+            50% { border-color: #ff0000; box-shadow: inset 0 0 100px rgba(255, 0, 60, 0.7), 0 0 70px rgba(255, 0, 60, 1); }
+            75% { border-color: #ff6666; box-shadow: inset 0 0 80px rgba(255, 0, 60, 0.5), 0 0 50px rgba(255, 0, 60, 1); }
+            100% { border-color: var(--neon-red); box-shadow: inset 0 0 50px rgba(255, 0, 60, 0.3), 0 0 30px rgba(255, 0, 60, 0.8); } 
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            10% { transform: translateX(-2px) translateY(-1px); }
+            20% { transform: translateX(2px) translateY(1px); }
+            30% { transform: translateX(-1px) translateY(-2px); }
+            40% { transform: translateX(1px) translateY(2px); }
+            50% { transform: translateX(-2px) translateY(1px); }
+            60% { transform: translateX(2px) translateY(-1px); }
+            70% { transform: translateX(-1px) translateY(2px); }
+            80% { transform: translateX(1px) translateY(-2px); }
+            90% { transform: translateX(-2px) translateY(-1px); }
+        }
         
         .cockpit { background: rgba(10,10,10,0.95); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); padding: 20px; border-radius: 0 0 15px 15px; text-align: center; margin-bottom: 20px; position: relative; }
         .current-mission { font-size: 1.4rem; font-weight: bold; text-transform: uppercase; margin: 10px 0; }
@@ -97,6 +119,20 @@
         <div class="timer-display">00:00:00</div>
         
         <button id="main-btn" class="btn-main" onclick="handleSystemClick()">INITIALIZE SYSTEM</button>
+        
+        <!-- Alarm Sound Selector -->
+        <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+            <label style="color:#666; font-size:0.7rem;">ALARM:</label>
+            <select id="alarmSelect" style="background:#000; border:1px solid #333; color:#fff; padding:5px; flex:1;">
+                <option value="siren">🚨 SIREN</option>
+                <option value="beep">📢 BEEP</option>
+                <option value="pulse">⚡ PULSE</option>
+                <option value="horn">📯 HORN</option>
+                <option value="chime">🔔 CHIME</option>
+            </select>
+        </div>
+        
+        <button onclick="testAlarm()" style="margin-top:10px; padding:5px; background:rgba(255,0,60,0.1); border:1px solid var(--neon-red); color:var(--neon-red); width:100%; cursor:pointer;">🚨 TEST ALARM</button>
     </div>
 
     <div class="timeline-container"></div>
@@ -188,9 +224,9 @@
             }
         }
 
-        // --- 3. AUDIO ENGINE (Ghost Sound) ---
+        // --- 3. AUDIO ENGINE (Multiple Alarm Sounds) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let sirenOsc = null, sirenGain = null, silenceOsc = null;
+        let currentAlarm = null, silenceOsc = null;
 
         function keepAudioAlive() {
             if(!silenceOsc) {
@@ -201,30 +237,120 @@
             }
         }
 
-        function playSynthAlarm() {
+        function createAlarmSound(type) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
-            if(!sirenOsc) {
-                sirenOsc = audioCtx.createOscillator(); sirenOsc.type = 'sawtooth'; sirenOsc.frequency.value = 600;
-                sirenGain = audioCtx.createGain(); sirenGain.gain.value = 0.5;
-                
-                // Siren LFO effect
-                const lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 4;
-                const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 200;
-                lfo.connect(lfoGain); lfoGain.connect(sirenOsc.frequency); lfo.start();
-
-                sirenOsc.connect(sirenGain); sirenGain.connect(audioCtx.destination);
-                sirenOsc.start();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            gain.gain.value = 0.4;
+            
+            switch(type) {
+                case 'siren': // Original siren
+                    osc.type = 'sawtooth'; osc.frequency.value = 600;
+                    const lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 4;
+                    const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 200;
+                    lfo.connect(lfoGain); lfoGain.connect(osc.frequency); lfo.start();
+                    break;
+                case 'beep': // Fast beeping
+                    osc.type = 'square'; osc.frequency.value = 800;
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    for(let i = 0; i < 20; i++) {
+                        gain.gain.setValueAtTime(0.4, audioCtx.currentTime + i * 0.5);
+                        gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.5 + 0.2);
+                    }
+                    break;
+                case 'pulse': // Electronic pulse
+                    osc.type = 'triangle'; osc.frequency.value = 440;
+                    const pulseLfo = audioCtx.createOscillator(); pulseLfo.type = 'square'; pulseLfo.frequency.value = 8;
+                    const pulseGain = audioCtx.createGain(); pulseGain.gain.value = 0.3;
+                    pulseLfo.connect(pulseGain); pulseGain.connect(gain.gain); pulseLfo.start();
+                    break;
+                case 'horn': // Air horn style
+                    osc.type = 'sawtooth'; osc.frequency.value = 300;
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 1);
+                    break;
+                case 'chime': // Bell-like chime
+                    osc.type = 'sine'; osc.frequency.value = 1000;
+                    gain.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
+                    break;
             }
+            
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start();
+            return { osc, gain };
         }
-        function stopSynthAlarm() { if(sirenOsc) { sirenOsc.stop(); sirenOsc = null; } }
+
+        function playSynthAlarm() {
+            const alarmType = document.getElementById('alarmSelect').value;
+            currentAlarm = createAlarmSound(alarmType);
+        }
+        
+        function stopSynthAlarm() { 
+            if(currentAlarm) { 
+                currentAlarm.osc.stop(); 
+                currentAlarm = null; 
+            } 
+        }
 
         // --- 4. CORE ENGINE ---
         let systemArmed = localStorage.getItem('systemArmed') === 'true' || false, alarmTriggered = false;
         let wakeLock = null;
         
-        // Request notification permission
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+        // Request notification permission on page load
+        if ('Notification' in window) {
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    console.log('Notification permission:', permission);
+                });
+            }
+            console.log('Current notification permission:', Notification.permission);
+        }
+        
+        // Test alarm function
+        function testAlarm() {
+            console.log('🚨 Testing alarm system...');
+            console.log('System armed:', systemArmed);
+            console.log('Alarm triggered:', alarmTriggered);
+            
+            if(!systemArmed) {
+                alert('Please arm the system first by clicking INITIALIZE SYSTEM');
+                return;
+            }
+            
+            // Force trigger alarm
+            alarmTriggered = true;
+            playSynthAlarm();
+            
+            // Test notification
+            if ('Notification' in window) {
+                console.log('Notification permission:', Notification.permission);
+                if (Notification.permission === 'granted') {
+                    new Notification('🚨 HUSTLE OS TEST ALARM', {
+                        body: 'This is a test alarm notification',
+                        icon: './favicon-32x32.png',
+                        vibrate: [200, 100, 200]
+                    });
+                } else {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification('🚨 HUSTLE OS TEST ALARM', {
+                                body: 'This is a test alarm notification',
+                                icon: './favicon-32x32.png',
+                                vibrate: [200, 100, 200]
+                            });
+                        }
+                    });
+                }
+            }
+            
+            // Visual effects
+            document.body.classList.add('red-alert-mode');
+            const btn = document.getElementById('main-btn');
+            btn.innerText = "⚠ SILENCE ALARM ⚠";
+            btn.style.borderColor = "var(--neon-red)"; 
+            btn.style.color = "var(--neon-red)";
         }
 
         function parseTime(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
@@ -298,11 +424,14 @@
                     }).catch(err => console.log('Wake lock failed:', err));
                 }
             } else if(alarmTriggered) {
-                stopSynthAlarm(); alarmTriggered = false;
+                stopSynthAlarm(); 
+                alarmTriggered = false;
                 document.body.classList.remove('red-alert-mode');
-                document.getElementById('main-btn').innerText = "SYSTEM ARMED";
-                document.getElementById('main-btn').style.color = "var(--neon-green)";
-                document.getElementById('main-btn').style.borderColor = "var(--neon-green)";
+                const btn = document.getElementById('main-btn');
+                btn.innerText = "SYSTEM ARMED";
+                btn.style.color = "var(--neon-green)";
+                btn.style.borderColor = "var(--neon-green)";
+                btn.style.background = "rgba(0,255,65,0.1)";
             }
         }
 
@@ -330,15 +459,20 @@
                 // Use mini task for alarm logic
                 if(miniSec <= 0 && miniSec > -10 && miniTask.title !== "IDLE MODE") {
                     if(systemArmed && !alarmTriggered) {
-                        alarmTriggered = true; playSynthAlarm();
+                        console.log('🚨 ALARM TRIGGERED for mini task:', miniTask.title);
+                        alarmTriggered = true; 
+                        playSynthAlarm();
                         
                         // Send notification
                         if ('Notification' in window && Notification.permission === 'granted') {
+                            console.log('📱 Sending notification...');
                             new Notification('🚨 HUSTLE OS ALARM', {
                                 body: `Task ended: ${miniTask.title}`,
                                 icon: './favicon-32x32.png',
                                 vibrate: [200, 100, 200]
                             });
+                        } else {
+                            console.log('❌ Notification permission not granted:', Notification.permission);
                         }
                         
                         document.body.classList.add('red-alert-mode');
