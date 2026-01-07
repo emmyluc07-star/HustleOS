@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="msapplication-TileColor" content="#00ff41">
+    <meta name="msapplication-TileImage" content="ms-icon-144x144.png">
+    <meta name="theme-color" content="#00ff41">
+    <title>HUSTLE_OS v5.0 // TEMPLATE_MODE</title>
+    <style>
+        /* --- KEEP YOUR EXISTING CSS (I added Edit Button styles below) --- */
+        :root { --bg-color: #000; --neon-green: #00ff41; --neon-red: #ff003c; --neon-blue: #00f3ff; --font-main: 'Courier New', monospace; }
+        body { background: var(--bg-color); color: #fff; font-family: var(--font-main); margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 30px 30px; }
+        .red-alert-mode { animation: flash-red 0.8s infinite; border: 4px solid var(--neon-red); }
+        @keyframes flash-red { 0%, 100% { border-color: transparent; } 50% { border-color: var(--neon-red); } }
+        
+        .cockpit { background: rgba(10,10,10,0.95); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); padding: 20px; border-radius: 0 0 15px 15px; text-align: center; margin-bottom: 20px; position: relative; }
+        .current-mission { font-size: 1.4rem; font-weight: bold; text-transform: uppercase; margin: 10px 0; }
+        .timer-display { font-size: 3.2rem; color: var(--neon-green); font-weight: bold; font-family: monospace; }
+        .btn-main { background: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); padding: 10px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        
+        /* TASK LIST STYLES */
+        .timeline-container { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        .task-card { background: rgba(20,20,20,0.6); border-left: 3px solid #333; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; position: relative; transition: 0.3s; }
+        .task-card.active { border-left-color: var(--neon-green); background: linear-gradient(90deg, rgba(0,255,65,0.1), transparent); transform: scale(1.02); }
+        
+        /* ACTION BUTTONS (EDIT & DELETE) */
+        .card-actions { display: flex; gap: 10px; }
+        .action-icon { background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.6; color: #fff; }
+        .action-icon:hover { opacity: 1; transform: scale(1.1); }
+        .btn-edit { color: var(--neon-blue); }
+        .btn-del { color: var(--neon-red); }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal-box { background: #111; border: 1px solid var(--neon-blue); padding: 20px; width: 85%; max-width: 350px; }
+        .cyber-input { width: 100%; background: #000; border: 1px solid #333; color: #fff;   padding: 10px; margin-bottom: 15px; box-sizing: border-box; }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-confirm { background: var(--neon-blue); color: #000; border: none; flex: 1; padding: 10px; font-weight: bold; cursor: pointer; }
+        .btn-cancel { border: 1px solid #444; color: #888; background: transparent; flex: 1; padding: 10px; cursor: pointer; }
+
+        .fab-add { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: #000; border: 2px solid var(--neon-blue); border-radius: 50%; color: var(--neon-blue); font-size: 2rem; display: flex; justify-content: center; align-items: center; cursor: pointer; z-index: 50; }
+    </style>
+</head>
+<body>
+
+    <div id="addModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color:var(--neon-blue); margin-top:0;">MISSION PARAMETERS</h3>
+            <input type="hidden" id="editId"> <label style="color:#666; font-size:0.7rem;">MISSION TITLE</label>
+            <input type="text" id="taskTitle" class="cyber-input" placeholder="e.g. DEEP WORK">
+            
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1">
+                    <label style="color:#666; font-size:0.7rem;">START (24H)</label>
+                    <input type="time" id="taskStart" class="cyber-input">
+                </div>
+                <div style="flex:1">
+                    <label style="color:#666; font-size:0.7rem;">END (24H)</label>
+                    <input type="time" id="taskEnd" class="cyber-input">
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">CANCEL</button>
+                <button class="btn-confirm" onclick="saveTask()">SAVE DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="cockpit">
+        <div style="position:absolute; top:10px; left:10px; font-size:0.6rem; color:#555;">SYS.V5.0 // ONLINE</div>
+        <button onclick="resetTemplate()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#555; cursor:pointer;">↺ RESET</button>
+        
+        <div id="mini-task" class="mini-task-card" style="display:none; position:absolute; top:40px; right:10px; background:rgba(0,255,65,0.1); border:1px solid var(--neon-green); padding:6px; border-radius:3px; font-size:0.6rem; width:120px;">
+            <div style="color:var(--neon-green); font-weight:bold; font-size:0.5rem;">PRIORITY</div>
+            <div id="mini-task-title" style="font-size:0.6rem; margin:2px 0;">LOADING...</div>
+            <div id="mini-task-timer" style="color:var(--neon-green); font-weight:bold; font-size:0.7rem;">00:00:00</div>
+        </div>
+        
+        <div style="color:#888; font-size:0.7rem; margin-top:15px;">CURRENT OBJECTIVE</div>
+        <div class="current-mission">LOADING...</div>
+        <div class="timer-display">00:00:00</div>
+        
+        <button id="main-btn" class="btn-main" onclick="handleSystemClick()">INITIALIZE SYSTEM</button>
+    </div>
+
+    <div class="timeline-container"></div>
+    <div class="fab-add" onclick="openModal()">+</div>
+
+    <script>
+        // --- 1. THE TEMPLATE (Your Schedule) ---
+        const TEMPLATE_SCHEDULE = [
+            { id: 't1', title: 'WAKE & PRAY',   start: '06:00', end: '07:00' },
+            { id: 't2', title: 'TRANSIT',       start: '07:00', end: '08:00' },
+            { id: 't3', title: 'PRINT BUSINESS',start: '08:00', end: '16:00' },
+            { id: 't4', title: 'WORK', start: '16:00', end: '23:00' },
+            { id: 't5', title: 'TRANSIT HOME',  start: '23:00', end: '00:00' },
+            { id: 't6', title: 'ACADEMIC STUDY',start: '00:00', end: '01:30' },
+            { id: 't7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
+            { id: 't8', title: 'SLEEP (3HRS)',  start: '03:00', end: '06:00' }
+        ];
+
+        // Load saved schedule OR use Template if empty
+        let schedule = JSON.parse(localStorage.getItem('userSchedule')) || TEMPLATE_SCHEDULE;
+
+        // --- 2. EDITING LOGIC ---
+        function openModal(taskId = null) {
+            const modal = document.getElementById('addModal');
+            const titleInput = document.getElementById('taskTitle');
+            const startInput = document.getElementById('taskStart');
+            const endInput = document.getElementById('taskEnd');
+            const idInput = document.getElementById('editId');
+
+            if (taskId) {
+                // EDIT MODE: Find task and fill inputs
+                const task = schedule.find(t => t.id === taskId);
+                titleInput.value = task.title;
+                startInput.value = task.start;
+                endInput.value = task.end;
+                idInput.value = taskId; // Save ID so we know we are updating
+            } else {
+                // ADD MODE: Clear inputs
+                titleInput.value = '';
+                startInput.value = '';
+                endInput.value = '';
+                idInput.value = ''; // No ID means new task
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+
+        function saveTask() {
+            const id = document.getElementById('editId').value;
+            const title = document.getElementById('taskTitle').value;
+            const start = document.getElementById('taskStart').value;
+            const end = document.getElementById('taskEnd').value;
+
+            if(!title || !start || !end) return alert("MISSING DATA");
+
+            if (id) {
+                // UPDATE EXISTING TASK
+                const index = schedule.findIndex(t => t.id === id);
+                if (index !== -1) {
+                    schedule[index] = { id, title, start, end };
+                }
+            } else {
+                // CREATE NEW TASK
+                schedule.push({ id: 'task_' + Date.now(), title, start, end });
+            }
+
+            // Sort list by time so overlaps are minimized
+            schedule.sort((a,b) => parseTime(a.start) - parseTime(b.start));
+
+            localStorage.setItem('userSchedule', JSON.stringify(schedule));
+            closeModal();
+            updateDisplay();
+        }  
+
+        function deleteTask(id) {
+            if(confirm("DELETE MISSION?")) {
+                schedule = schedule.filter(t => t.id !== id);
+                localStorage.setItem('userSchedule', JSON.stringify(schedule));
+                updateDisplay();
+            }
+        }
+
+        function resetTemplate() {
+            if(confirm("RESET TO FACTORY SETTINGS? This will erase custom tasks.")) {
+                schedule = JSON.parse(JSON.stringify(TEMPLATE_SCHEDULE)); // Deep copy
+                localStorage.setItem('userSchedule', JSON.stringify(schedule));
+                updateDisplay();
+            }
+        }
+
+        // --- 3. AUDIO ENGINE (Ghost Sound) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let sirenOsc = null, sirenGain = null, silenceOsc = null;
+
+        function keepAudioAlive() {
+            if(!silenceOsc) {
+                silenceOsc = audioCtx.createOscillator();
+                const g = audioCtx.createGain(); g.gain.value = 0.0001;
+                silenceOsc.connect(g); g.connect(audioCtx.destination);
+                silenceOsc.start();
+            }
+        }
+
+        function playSynthAlarm() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            if(!sirenOsc) {
+                sirenOsc = audioCtx.createOscillator(); sirenOsc.type = 'sawtooth'; sirenOsc.frequency.value = 600;
+                sirenGain = audioCtx.createGain(); sirenGain.gain.value = 0.5;
+                
+                // Siren LFO effect
+                const lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 4;
+                const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 200;
+                lfo.connect(lfoGain); lfoGain.connect(sirenOsc.frequency); lfo.start();
+
+                sirenOsc.connect(sirenGain); sirenGain.connect(audioCtx.destination);
+                sirenOsc.start();
+            }
+        }
+        function stopSynthAlarm() { if(sirenOsc) { sirenOsc.stop(); sirenOsc = null; } }
+
+        // --- 4. CORE ENGINE ---
+        let systemArmed = localStorage.getItem('systemArmed') === 'true' || false, alarmTriggered = false;
+        let wakeLock = null;
+        
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        function parseTime(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+        
+        function getCurrentMinutes() { const d = new Date(); return d.getHours()*60 + d.getMinutes(); }
+
+        function findCurrentTask() {
+            // 1. Get current time
+            const now = getCurrentMinutes();
+            let validCandidates = [];
+
+            // 2. Find ALL tasks that are currently active
+            for(let t of schedule) {
+                let s = parseTime(t.start);
+                let e = parseTime(t.end);
+                
+                // Handle Midnight (e.g., 23:00 to 01:00)
+                if(e < s) e += 1440; 
+                
+                // Handle "Now" being late night (e.g., it's 00:30, task started 23:00)
+                let n = now;
+                if(n < s && s > 1200) n += 1440; 
+
+                // Check if we are inside this task
+                if(n >= s && n < e) {
+                    // Save the task AND its length (duration)
+                    validCandidates.push({ task: t, duration: e - s });
+                }
+            }
+
+            // 3. Logic: Return both shortest and longest
+            if(validCandidates.length === 0) {
+                return { main: { title: "IDLE MODE", start: "00:00", end: "00:00" }, mini: null };
+            }
+
+            // Sort by DURATION (Smallest first)
+            validCandidates.sort((a, b) => a.duration - b.duration);
+
+            if(validCandidates.length === 1) {
+                return { main: validCandidates[0].task, mini: null };
+            } else {
+                // Multiple tasks: shortest goes to mini, longest goes to main
+                return { 
+                    mini: validCandidates[0].task, 
+                    main: validCandidates[validCandidates.length - 1].task 
+                };
+            }
+        }
+
+        function getSecondsLeft(endStr) {
+            if(endStr === "00:00") return 0;
+            const d = new Date();
+            const [h,m] = endStr.split(':').map(Number);
+            let target = new Date(d); target.setHours(h,m,0,0);
+            if(target < d) target.setDate(target.getDate()+1);
+            return Math.floor((target - d)/1000);
+        }
+
+        function handleSystemClick() {
+            if(!systemArmed) {
+                audioCtx.resume().then(() => { keepAudioAlive(); });
+                systemArmed = true;
+                localStorage.setItem('systemArmed', 'true');
+                document.getElementById('main-btn').innerText = "SYSTEM ARMED";
+                document.getElementById('main-btn').style.background = "rgba(0,255,65,0.1)";
+                
+                // Request wake lock to keep screen active
+                if ('wakeLock' in navigator) {
+                    navigator.wakeLock.request('screen').then(lock => {
+                        wakeLock = lock;
+                    }).catch(err => console.log('Wake lock failed:', err));
+                }
+            } else if(alarmTriggered) {
+                stopSynthAlarm(); alarmTriggered = false;
+                document.body.classList.remove('red-alert-mode');
+                document.getElementById('main-btn').innerText = "SYSTEM ARMED";
+                document.getElementById('main-btn').style.color = "var(--neon-green)";
+                document.getElementById('main-btn').style.borderColor = "var(--neon-green)";
+            }
+        }
+
+        function updateDisplay() {
+            const tasks = findCurrentTask();
+            const mainTask = tasks.main;
+            const miniTask = tasks.mini;
+            
+            // Update main task display
+            const sec = getSecondsLeft(mainTask.end);
+            document.querySelector('.current-mission').innerText = mainTask.title;
+            const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+            document.querySelector('.timer-display').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+            // Update mini task display
+            const miniCard = document.getElementById('mini-task');
+            if(miniTask) {
+                const miniSec = getSecondsLeft(miniTask.end);
+                const miniH = Math.floor(miniSec/3600), miniM = Math.floor((miniSec%3600)/60), miniS = miniSec%60;
+                
+                document.getElementById('mini-task-title').innerText = miniTask.title;
+                document.getElementById('mini-task-timer').innerText = `${String(miniH).padStart(2,'0')}:${String(miniM).padStart(2,'0')}:${String(miniS).padStart(2,'0')}`;
+                miniCard.style.display = 'block';
+                
+                // Use mini task for alarm logic
+                if(miniSec <= 0 && miniSec > -10 && miniTask.title !== "IDLE MODE") {
+                    if(systemArmed && !alarmTriggered) {
+                        alarmTriggered = true; playSynthAlarm();
+                        
+                        // Send notification
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification('🚨 HUSTLE OS ALARM', {
+                                body: `Task ended: ${miniTask.title}`,
+                                icon: './favicon-32x32.png',
+                                vibrate: [200, 100, 200]
+                            });
+                        }
+                        
+                        document.body.classList.add('red-alert-mode');
+                        const btn = document.getElementById('main-btn');
+                        btn.innerText = "⚠ SILENCE ALARM ⚠";
+                        btn.style.borderColor = "var(--neon-red)"; btn.style.color = "var(--neon-red)";
+                    }
+                }
+            } else {
+                miniCard.style.display = 'none';
+                
+                // Use main task for alarm logic when no mini task
+                if(sec <= 0 && sec > -10 && mainTask.title !== "IDLE MODE") {
+                    if(systemArmed && !alarmTriggered) {
+                        alarmTriggered = true; playSynthAlarm();
+                        
+                        // Send notification
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            new Notification('🚨 HUSTLE OS ALARM', {
+                                body: `Task ended: ${mainTask.title}`,
+                                icon: './favicon-32x32.png',
+                                vibrate: [200, 100, 200]
+                            });
+                        }
+                        
+                        document.body.classList.add('red-alert-mode');
+                        const btn = document.getElementById('main-btn');
+                        btn.innerText = "⚠ SILENCE ALARM ⚠";
+                        btn.style.borderColor = "var(--neon-red)"; btn.style.color = "var(--neon-red)";
+                    }
+                }
+            }
+
+            // RENDER LIST
+            const container = document.querySelector('.timeline-container');
+            container.innerHTML = ''; 
+            schedule.forEach(t => {
+                const active = (t.id === mainTask.id) || (miniTask && t.id === miniTask.id);
+                const div = document.createElement('div');
+                div.className = `task-card ${active ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div>
+                        <div style="font-size:0.8rem; color:#777; font-weight:bold;">${t.start} - ${t.end}</div>
+                        <div style="font-size:1rem; font-weight:bold; color:#ddd;">${t.title}</div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-icon btn-edit" onclick="openModal('${t.id}')">✎</button>
+                        <button class="action-icon btn-del" onclick="deleteTask('${t.id}')">×</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        setInterval(updateDisplay, 1000);
+        updateDisplay();
+        
+        // Initialize button state on page load
+        if(systemArmed) {
+            document.getElementById('main-btn').innerText = "SYSTEM ARMED";
+            document.getElementById('main-btn').style.background = "rgba(0,255,65,0.1)";
+        }
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js');
+        }
+    </script>
+</body>
+</html>
