@@ -328,34 +328,25 @@
             alarmTriggered = true;
             playSynthAlarm();
             
-            // Test notification
-            if ('Notification' in window) {
-                console.log('Notification permission:', Notification.permission);
-                if (Notification.permission === 'granted') {
-                    new Notification('🚨 HUSTLE OS TEST ALARM', {
-                        body: 'This is a test alarm notification',
-                        icon: './favicon-32x32.png',
-                        vibrate: [200, 100, 200]
-                    });
-                } else {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === 'granted') {
-                            new Notification('🚨 HUSTLE OS TEST ALARM', {
-                                body: 'This is a test alarm notification',
-                                icon: './favicon-32x32.png',
-                                vibrate: [200, 100, 200]
-                            });
-                        }
-                    });
-                }
-            }
-            
-            // Visual effects
+            // Visual effects FIRST (before notification)
             document.body.classList.add('red-alert-mode');
             const btn = document.getElementById('main-btn');
             btn.innerText = "⚠ SILENCE ALARM ⚠";
             btn.style.borderColor = "var(--neon-red)"; 
             btn.style.color = "var(--neon-red)";
+            
+            // Test notification (wrapped in try-catch)
+            try {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('🚨 HUSTLE OS TEST ALARM', {
+                        body: 'This is a test alarm notification',
+                        icon: './favicon-32x32.png',
+                        vibrate: [200, 100, 200]
+                    });
+                }
+            } catch(e) {
+                console.log('Notification error:', e);
+            }
         }
 
         function parseTime(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
@@ -468,22 +459,25 @@
                         alarmTriggered = true; 
                         playSynthAlarm();
                         
-                        // Send notification
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            console.log('📱 Sending notification...');
-                            new Notification('🚨 HUSTLE OS ALARM', {
-                                body: `Task ended: ${miniTask.title}`,
-                                icon: './favicon-32x32.png',
-                                vibrate: [200, 100, 200]
-                            });
-                        } else {
-                            console.log('❌ Notification permission not granted:', Notification.permission);
-                        }
-                        
+                        // Visual effects FIRST (critical for mobile)
                         document.body.classList.add('red-alert-mode');
                         const btn = document.getElementById('main-btn');
                         btn.innerText = "⚠ SILENCE ALARM ⚠";
-                        btn.style.borderColor = "var(--neon-red)"; btn.style.color = "var(--neon-red)";
+                        btn.style.borderColor = "var(--neon-red)"; 
+                        btn.style.color = "var(--neon-red)";
+                        
+                        // Send notification (with error handling)
+                        try {
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                new Notification('🚨 HUSTLE OS ALARM', {
+                                    body: `Task ended: ${miniTask.title}`,
+                                    icon: './favicon-32x32.png',
+                                    vibrate: [200, 100, 200]
+                                });
+                            }
+                        } catch(e) {
+                            console.log('Notification error (ignored):', e);
+                        }
                     }
                 }
             } else {
@@ -492,21 +486,28 @@
                 // Use main task for alarm logic when no mini task
                 if(sec <= 0 && sec > -10 && mainTask.title !== "IDLE MODE") {
                     if(systemArmed && !alarmTriggered) {
-                        alarmTriggered = true; playSynthAlarm();
+                        alarmTriggered = true; 
+                        playSynthAlarm();
                         
-                        // Send notification
-                        if ('Notification' in window && Notification.permission === 'granted') {
-                            new Notification('🚨 HUSTLE OS ALARM', {
-                                body: `Task ended: ${mainTask.title}`,
-                                icon: './favicon-32x32.png',
-                                vibrate: [200, 100, 200]
-                            });
-                        }
-                        
+                        // Visual effects FIRST (critical for mobile)
                         document.body.classList.add('red-alert-mode');
                         const btn = document.getElementById('main-btn');
                         btn.innerText = "⚠ SILENCE ALARM ⚠";
-                        btn.style.borderColor = "var(--neon-red)"; btn.style.color = "var(--neon-red)";
+                        btn.style.borderColor = "var(--neon-red)"; 
+                        btn.style.color = "var(--neon-red)";
+                        
+                        // Send notification (with error handling)
+                        try {
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                new Notification('🚨 HUSTLE OS ALARM', {
+                                    body: `Task ended: ${mainTask.title}`,
+                                    icon: './favicon-32x32.png',
+                                    vibrate: [200, 100, 200]
+                                });
+                            }
+                        } catch(e) {
+                            console.log('Notification error (ignored):', e);
+                        }
                     }
                 }
             }
