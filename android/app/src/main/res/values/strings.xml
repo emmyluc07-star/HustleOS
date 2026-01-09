@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HustleOS</string>
+    <string name="title_activity_main">HustleOS</string>
+    <string name="package_name">com.hustleos.app</string>
+    <string name="custom_url_scheme">com.hustleos.app</string>
+</resources>
