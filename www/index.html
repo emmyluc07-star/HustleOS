@@ -129,7 +129,7 @@
         <!-- Alarm Sound Selector -->
         <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
             <label style="color:#666; font-size:0.7rem;">ALARM:</label>
-            <select id="alarmSelect" style="background:#000; border:1px solid #333; color:#fff; padding:5px; flex:1;">
+            <select id="alarmSelect" onchange="saveAlarmSound()" style="background:#000; border:1px solid #333; color:#fff; padding:5px; flex:1;">
                 <option value="siren">🚨 SIREN</option>
                 <option value="beep">📢 BEEP</option>
                 <option value="pulse">⚡ PULSE</option>
@@ -160,7 +160,7 @@
         </div>
     </div>
 
-    <script type="module" src="https://unpkg.com/@capacitor/core@latest/dist/capacitor.js"></script>
+    <script type="module" src="https://unpkg.com/@capacitor/core@6/dist/capacitor.js"></script>
     <script src="./native-integration.js"></script>
     <script>
         // --- 1. THE TEMPLATE (Your Schedule) ---
@@ -177,6 +177,52 @@
 
         // Load saved schedule OR use Template if empty
         let schedule = JSON.parse(localStorage.getItem('userSchedule')) || TEMPLATE_SCHEDULE;
+        let pinnedTasks = JSON.parse(localStorage.getItem('pinnedTasks')) || [];
+        
+        function togglePin(taskId) {
+            if (pinnedTasks.includes(taskId)) {
+                pinnedTasks = pinnedTasks.filter(id => id !== taskId);
+            } else {
+                pinnedTasks.push(taskId);
+            }
+            localStorage.setItem('pinnedTasks', JSON.stringify(pinnedTasks));
+            updateDisplay();
+        }
+        
+        // --- STOPWATCH ---
+        let stopwatchTime = 0;
+        let stopwatchInterval = null;
+        let stopwatchRunning = false;
+        
+        function formatStopwatchTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+        
+        function startStopwatch() {
+            if (!stopwatchRunning) {
+                stopwatchRunning = true;
+                stopwatchInterval = setInterval(() => {
+                    stopwatchTime++;
+                    document.getElementById('stopwatch-display').innerText = formatStopwatchTime(stopwatchTime);
+                }, 1000);
+                document.getElementById('stopwatch-btn').innerText = 'PAUSE';
+            } else {
+                stopwatchRunning = false;
+                clearInterval(stopwatchInterval);
+                document.getElementById('stopwatch-btn').innerText = 'START';
+            }
+        }
+        
+        function resetStopwatch() {
+            stopwatchRunning = false;
+            clearInterval(stopwatchInterval);
+            stopwatchTime = 0;
+            document.getElementById('stopwatch-display').innerText = '00:00:00';
+            document.getElementById('stopwatch-btn').innerText = 'START';
+        }
 
         // --- NAVIGATION ---
         let currentView = 'alarms';
@@ -193,10 +239,38 @@
                 updateDisplay();
                 fab.style.display = 'flex';
             } else if (view === 'stopwatch') {
-                container.innerHTML = '<div style="text-align:center; padding:50px; color:#666;">STOPWATCH FEATURE<br>COMING SOON</div>';
+                container.innerHTML = `
+                    <div style="text-align:center; padding:50px;">
+                        <div style="font-size:3rem; color:var(--neon-blue); margin:30px 0;" id="stopwatch-display">00:00:00</div>
+                        <button onclick="startStopwatch()" id="stopwatch-btn" style="background:var(--neon-blue); color:#000; border:none; padding:15px 30px; margin:10px; font-weight:bold; cursor:pointer;">START</button>
+                        <button onclick="resetStopwatch()" style="background:transparent; border:1px solid var(--neon-red); color:var(--neon-red); padding:15px 30px; margin:10px; cursor:pointer;">RESET</button>
+                    </div>
+                `;
                 fab.style.display = 'none';
             } else if (view === 'settings') {
-                container.innerHTML = '<div style="text-align:center; padding:50px; color:#666;">SETTINGS PANEL<br>COMING SOON</div>';
+                container.innerHTML = `
+                    <div style="padding:20px;">
+                        <h3 style="color:var(--neon-blue); margin-bottom:20px;">SYSTEM SETTINGS</h3>
+                        
+                        <div style="background:rgba(20,20,20,0.6); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-green);">
+                            <div style="font-weight:bold; margin-bottom:10px;">🔋 BATTERY OPTIMIZATION</div>
+                            <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Disable battery optimization to ensure reliable alarms</div>
+                            <button onclick="window.nativeIntegration.requestBatteryOptimizationWhitelist()" style="background:var(--neon-green); color:#000; border:none; padding:10px 20px; cursor:pointer;">CHECK SETTINGS</button>
+                        </div>
+                        
+                        <div style="background:rgba(20,20,20,0.6); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-blue);">
+                            <div style="font-weight:bold; margin-bottom:10px;">📱 PERMISSIONS</div>
+                            <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Grant all permissions for full functionality</div>
+                            <button onclick="window.nativeIntegration.requestPermissions()" style="background:var(--neon-blue); color:#000; border:none; padding:10px 20px; cursor:pointer;">REQUEST PERMISSIONS</button>
+                        </div>
+                        
+                        <div style="background:rgba(20,20,20,0.6); padding:15px; border-left:3px solid var(--neon-red);">
+                            <div style="font-weight:bold; margin-bottom:10px;">🚨 ALARM TEST</div>
+                            <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Test system alarm functionality</div>
+                            <button onclick="testAlarm()" style="background:var(--neon-red); color:#000; border:none; padding:10px 20px; cursor:pointer;">TEST ALARM</button>
+                        </div>
+                    </div>
+                `;
                 fab.style.display = 'none';
             }
         }
@@ -274,6 +348,20 @@
         // --- 3. AUDIO ENGINE (Multiple Alarm Sounds) ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let currentAlarm = null, silenceOsc = null;
+        let selectedAlarmSound = localStorage.getItem('selectedAlarmSound') || 'siren';
+        
+        // Set saved alarm sound on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('alarmSelect')) {
+                document.getElementById('alarmSelect').value = selectedAlarmSound;
+            }
+        });
+        
+        // Save alarm sound when changed
+        function saveAlarmSound() {
+            selectedAlarmSound = document.getElementById('alarmSelect').value;
+            localStorage.setItem('selectedAlarmSound', selectedAlarmSound);
+        }
 
         function keepAudioAlive() {
             if(!silenceOsc) {
@@ -330,8 +418,7 @@
         }
 
         function playSynthAlarm() {
-            const alarmType = document.getElementById('alarmSelect').value;
-            currentAlarm = createAlarmSound(alarmType);
+            currentAlarm = createAlarmSound(selectedAlarmSound);
         }
         
         function stopSynthAlarm() { 
@@ -499,7 +586,7 @@
             }
         }
 
-        function updateDisplay() {
+        async function updateDisplay() {
             const tasks = findCurrentTask();
             const mainTask = tasks.main;
             const miniTask = tasks.mini;
@@ -535,10 +622,12 @@
                         btn.style.color = "var(--neon-red)";
                         
                         // Send native system alarm
-                        await window.nativeIntegration.sendSystemAlarm(
-                            '🚨 HUSTLE OS ALARM', 
-                            `Task ended: ${miniTask.title}`
-                        );
+                        if (window.nativeIntegration) {
+                            await window.nativeIntegration.sendSystemAlarm(
+                                '🚨 HUSTLE OS ALARM', 
+                                `Task ended: ${miniTask.title}`
+                            );
+                        }
                     }
                 }
             } else {
@@ -558,29 +647,44 @@
                         btn.style.color = "var(--neon-red)";
                         
                         // Send native system alarm
-                        await window.nativeIntegration.sendSystemAlarm(
-                            '🚨 HUSTLE OS ALARM', 
-                            `Task ended: ${mainTask.title}`
-                        );
+                        if (window.nativeIntegration) {
+                            await window.nativeIntegration.sendSystemAlarm(
+                                '🚨 HUSTLE OS ALARM', 
+                                `Task ended: ${mainTask.title}`
+                            );
+                        }
                     }
                 }
             }
 
-            // RENDER LIST
+            // RENDER LIST (Sort pinned tasks first)
             const container = document.querySelector('.timeline-container');
             container.innerHTML = ''; 
-            schedule.forEach(t => {
+            
+            const sortedSchedule = [...schedule].sort((a, b) => {
+                const aPinned = pinnedTasks.includes(a.id);
+                const bPinned = pinnedTasks.includes(b.id);
+                if (aPinned && !bPinned) return -1;
+                if (!aPinned && bPinned) return 1;
+                return parseTime(a.start) - parseTime(b.start);
+            });
+            
+            sortedSchedule.forEach(t => {
                 const active = (t.id === mainTask.id) || (miniTask && t.id === miniTask.id);
+                const pinned = pinnedTasks.includes(t.id);
                 const div = document.createElement('div');
                 div.className = `task-card ${active ? 'active' : ''}`;
+                div.style.background = pinned ? 'rgba(0,255,65,0.1)' : 'rgba(20,20,20,0.6)';
+                div.onclick = () => openModal(t.id);
                 div.innerHTML = `
                     <div>
-                        <div style="font-size:0.8rem; color:#777; font-weight:bold;">${t.start} - ${t.end}</div>
+                        <div style="font-size:0.8rem; color:#777; font-weight:bold;">${pinned ? '📌 ' : ''}${t.start} - ${t.end}</div>
                         <div style="font-size:1rem; font-weight:bold; color:#ddd;">${t.title}</div>
                     </div>
                     <div class="card-actions">
-                        <button class="action-icon btn-edit" onclick="openModal('${t.id}')">✎</button>
-                        <button class="action-icon btn-del" onclick="deleteTask('${t.id}')">×</button>
+                        <button class="action-icon" onclick="event.stopPropagation(); togglePin('${t.id}')" style="color:${pinned ? 'var(--neon-green)' : '#666'};">📌</button>
+                        <button class="action-icon btn-edit" onclick="event.stopPropagation(); openModal('${t.id}')">✎</button>
+                        <button class="action-icon btn-del" onclick="event.stopPropagation(); deleteTask('${t.id}')">×</button>
                     </div>
                 `;
                 container.appendChild(div);
