@@ -147,35 +147,48 @@ class NativeIntegration {
     console.log('🚨 Sending system alarm:', title);
     
     if (!this.isNative) {
-      console.log('🌐 Web mode - using browser notifications');
-      return false; // Let web notification handle it
+      console.log('🌐 Web mode - skipping native notification');
+      return false;
     }
 
     try {
-      // Use Capacitor plugin system with simpler approach
       if (window.Capacitor?.Plugins?.LocalNotifications) {
         const LocalNotifications = window.Capacitor.Plugins.LocalNotifications;
         
-        console.log('📱 Scheduling native notification...');
+        console.log('📱 Creating notification channel...');
         
-        // Schedule immediate notification
+        // Create high-priority channel first
+        try {
+          await LocalNotifications.createChannel({
+            id: 'alarm-channel',
+            name: 'HustleOS Alarms',
+            description: 'Critical alarm notifications',
+            importance: 5,
+            sound: 'default',
+            vibration: true,
+            lights: true
+          });
+        } catch (channelError) {
+          console.log('Channel creation failed, continuing...', channelError);
+        }
+        
+        console.log('📱 Scheduling notification...');
+        
         const result = await LocalNotifications.schedule({
           notifications: [{
             title,
             body,
-            id: Date.now(),
-            schedule: { at: new Date(Date.now() + 50) }, // 50ms delay
+            id: Math.floor(Math.random() * 1000000),
+            channelId: 'alarm-channel',
+            schedule: { at: new Date(Date.now() + 100) },
             sound: 'default',
-            priority: 5, // MAX priority
+            priority: 2,
             ongoing: false,
-            autoCancel: true,
-            extra: {
-              data: 'alarm'
-            }
+            autoCancel: true
           }]
         });
         
-        console.log('✅ Native notification scheduled:', result);
+        console.log('✅ Native notification result:', result);
         return true;
       } else {
         console.log('❌ LocalNotifications plugin not available');
@@ -183,7 +196,7 @@ class NativeIntegration {
       }
       
     } catch (error) {
-      console.log('❌ Native notification failed:', error);
+      console.log('❌ Native notification error:', error);
       return false;
     }
   }

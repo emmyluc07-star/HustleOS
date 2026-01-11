@@ -1291,14 +1291,11 @@
         async function sendNotification(title, body) {
             console.log('🔔 Attempting notification:', title, body);
             
-            // Try multiple notification methods aggressively
-            let success = false;
-            
-            // Method 1: Native notification first
+            // Try native notification first (for mobile app)
             if (window.nativeIntegration && window.nativeIntegration.isNative) {
                 try {
                     console.log('📱 Trying native notification...');
-                    success = await window.nativeIntegration.sendSystemAlarm(title, body);
+                    const success = await window.nativeIntegration.sendSystemAlarm(title, body);
                     if (success) {
                         console.log('✅ Native notification sent');
                         return true;
@@ -1308,9 +1305,10 @@
                 }
             }
             
-            // Method 2: Web notification with aggressive permission request
+            // Try web notification (for browser)
             if ('Notification' in window) {
-                if (Notification.permission !== 'granted') {
+                // Request permission if needed
+                if (Notification.permission === 'default') {
                     console.log('📱 Requesting notification permission...');
                     const permission = await Notification.requestPermission();
                     console.log('📱 Permission result:', permission);
@@ -1327,12 +1325,7 @@
                             vibrate: [1000, 500, 1000, 500, 1000],
                             silent: false,
                             renotify: true,
-                            badge: './favicon-32x32.png',
-                            timestamp: Date.now(),
-                            actions: [{
-                                action: 'silence',
-                                title: 'Silence Alarm'
-                            }]
+                            badge: './favicon-32x32.png'
                         });
                         
                         notification.onclick = () => {
@@ -1341,22 +1334,17 @@
                         };
                         
                         console.log('✅ Web notification created');
-                        success = true;
+                        return true;
                     } catch (e) {
                         console.log('❌ Web notification failed:', e);
                     }
+                } else {
+                    console.log('❌ Notification permission denied');
                 }
             }
             
-            // Method 3: Force browser alert as last resort
-            if (!success) {
-                console.log('⚠️ All notifications failed, showing alert');
-                setTimeout(() => {
-                    alert(`🚨 ${title}\n${body}`);
-                }, 500);
-            }
-            
-            return success;
+            console.log('⚠️ No notification methods available');
+            return false;
         }
         
         async function testAlarm() {
