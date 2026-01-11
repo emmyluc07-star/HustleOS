@@ -1,6 +1,7 @@
 package com.hustleos.app;
 
 import android.app.AlarmManager;
+import android.app.KeyguardManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.WindowManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.Manifest;
@@ -20,7 +22,40 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Always show on lock screen (this is good for alarms)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            setShowWhenLocked(true);
+        } else {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        }
+        
+        // Only turn screen on if user enabled it (check from JavaScript)
+        // This will be controlled by the web app when alarm triggers
+        
         requestHustleOSPermissions();
+    }
+    
+    // Method to be called from JavaScript when alarm triggers
+    public void handleAlarmTrigger(boolean shouldWakeScreen) {
+        if (shouldWakeScreen) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setTurnScreenOn(true);
+            } else {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            }
+            
+            // Dismiss keyguard for alarm
+            KeyguardManager keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                keyguardManager.requestDismissKeyguard(this, null);
+            } else {
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+            }
+        }
+        
+        // Always keep screen on during alarm
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     private void requestHustleOSPermissions() {

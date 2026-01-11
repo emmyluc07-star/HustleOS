@@ -13,33 +13,110 @@ class NativeIntegration {
   }
 
   async requestPermissions() {
-    if (!this.isNative) return;
+    console.log('📱 Starting permission requests...');
+    
+    if (!this.isNative) {
+      console.log('🌐 Web mode - requesting browser permissions');
+      
+      // Request notification permission aggressively
+      if ('Notification' in window) {
+        console.log('🔔 Current notification permission:', Notification.permission);
+        
+        if (Notification.permission === 'default' || Notification.permission === 'denied') {
+          console.log('📱 Requesting notification permission...');
+          const permission = await Notification.requestPermission();
+          console.log('📱 New permission:', permission);
+          
+          if (permission === 'granted') {
+            // Test notification immediately
+            try {
+              const testNotif = new Notification('✅ HustleOS Permissions', {
+                body: 'Notifications are now enabled!',
+                icon: './favicon-32x32.png',
+                tag: 'permission-test'
+              });
+              setTimeout(() => testNotif.close(), 3000);
+              alert('✅ Notification permission granted!');
+            } catch (e) {
+              alert('⚠️ Permission granted but notification failed: ' + e.message);
+            }
+          } else {
+            alert('❌ Notification permission denied. Please enable in browser settings.');
+          }
+        } else if (Notification.permission === 'granted') {
+          alert('✅ Notifications already enabled!');
+        }
+      } else {
+        alert('❌ Notifications not supported in this browser');
+      }
+      return;
+    }
 
+    // Native mode - use Capacitor plugin system
+    console.log('📱 Native mode - requesting Android permissions');
+    let results = [];
+    
     try {
-      // Local notifications
-      const { LocalNotifications } = await import('@capacitor/local-notifications');
-      await LocalNotifications.requestPermissions();
+      // Use Capacitor plugin system
+      if (window.Capacitor?.Plugins?.LocalNotifications) {
+        console.log('🔔 Requesting local notification permissions...');
+        const notifResult = await window.Capacitor.Plugins.LocalNotifications.requestPermissions();
+        console.log('🔔 Notification result:', notifResult);
+        results.push(`Notifications: ${notifResult.display}`);
+        
+        // Test native notification
+        if (notifResult.display === 'granted') {
+          await window.Capacitor.Plugins.LocalNotifications.schedule({
+            notifications: [{
+              title: '✅ HustleOS Permissions',
+              body: 'Native notifications enabled!',
+              id: 999999,
+              schedule: { at: new Date(Date.now() + 1000) }
+            }]
+          });
+        }
+      } else {
+        results.push('Notifications: Plugin not available');
+      }
 
-      // Geolocation (for future features)
-      const { Geolocation } = await import('@capacitor/geolocation');
-      await Geolocation.requestPermissions();
+      alert('📱 Permission Results:\n' + results.join('\n'));
+      return true;
 
     } catch (error) {
-      console.log('Permission request failed:', error);
+      console.log('❌ Permission request failed:', error);
+      alert('❌ Permission request failed: ' + error.message);
+      return false;
     }
   }
 
   async keepScreenAwake() {
     if (!this.isNative) {
-      // Web fallback
+      // Web fallback with enhanced wake lock
       if ('wakeLock' in navigator) {
-        this.wakeLock = await navigator.wakeLock.request('screen');
+        try {
+          this.wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Web wake lock activated');
+          
+          // Re-request wake lock when it's released
+          this.wakeLock.addEventListener('release', async () => {
+            console.log('Wake lock released, attempting to reacquire...');
+            try {
+              this.wakeLock = await navigator.wakeLock.request('screen');
+            } catch (err) {
+              console.log('Failed to reacquire wake lock:', err);
+            }
+          });
+        } catch (err) {
+          console.log('Wake lock failed:', err);
+        }
       }
       return;
     }
 
-    const { KeepAwake } = await import('@capacitor/keep-awake');
-    await KeepAwake.keepAwake();
+    // Use Capacitor plugin system
+    if (window.Capacitor?.Plugins?.KeepAwake) {
+      await window.Capacitor.Plugins.KeepAwake.keepAwake();
+    }
   }
 
   async allowScreenSleep() {
@@ -67,33 +144,48 @@ class NativeIntegration {
   }
 
   async sendSystemAlarm(title, body) {
+    console.log('🚨 Sending system alarm:', title);
+    
     if (!this.isNative) {
-      // Web fallback
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(title, {
-          body,
-          icon: './favicon-32x32.png',
-          tag: 'hustle-alarm',
-          requireInteraction: true,
-          vibrate: [200, 100, 200, 100, 200]
-        });
-      }
-      return;
+      console.log('🌐 Web mode - using browser notifications');
+      return false; // Let web notification handle it
     }
 
-    const { LocalNotifications } = await import('@capacitor/local-notifications');
-    await LocalNotifications.schedule({
-      notifications: [{
-        title,
-        body,
-        id: Date.now(),
-        schedule: { at: new Date(Date.now() + 1000) },
-        sound: 'default',
-        attachments: null,
-        actionTypeId: "",
-        extra: null
-      }]
-    });
+    try {
+      // Use Capacitor plugin system with simpler approach
+      if (window.Capacitor?.Plugins?.LocalNotifications) {
+        const LocalNotifications = window.Capacitor.Plugins.LocalNotifications;
+        
+        console.log('📱 Scheduling native notification...');
+        
+        // Schedule immediate notification
+        const result = await LocalNotifications.schedule({
+          notifications: [{
+            title,
+            body,
+            id: Date.now(),
+            schedule: { at: new Date(Date.now() + 50) }, // 50ms delay
+            sound: 'default',
+            priority: 5, // MAX priority
+            ongoing: false,
+            autoCancel: true,
+            extra: {
+              data: 'alarm'
+            }
+          }]
+        });
+        
+        console.log('✅ Native notification scheduled:', result);
+        return true;
+      } else {
+        console.log('❌ LocalNotifications plugin not available');
+        return false;
+      }
+      
+    } catch (error) {
+      console.log('❌ Native notification failed:', error);
+      return false;
+    }
   }
 
   async checkBatteryOptimization() {
@@ -115,11 +207,36 @@ class NativeIntegration {
   }
 
   async requestBatteryOptimizationWhitelist() {
-    if (!this.isNative) return;
+    if (!this.isNative) {
+      alert('Battery optimization settings:\n\n1. Go to browser settings\n2. Find "Site Settings" or "Permissions"\n3. Allow notifications and background sync for HustleOS');
+      return;
+    }
 
-    // This would require a custom Android plugin
-    // For now, show instructions to user
-    alert('To ensure reliable alarms:\n\n1. Go to Settings > Battery\n2. Find "Battery Optimization"\n3. Select "HustleOS"\n4. Choose "Don\'t optimize"');
+    try {
+      // For native Android, open battery optimization settings
+      if (window.Capacitor?.Plugins?.App) {
+        await window.Capacitor.Plugins.App.openUrl({ url: 'android-settings:REQUEST_IGNORE_BATTERY_OPTIMIZATIONS' });
+      }
+    } catch (error) {
+      // Fallback: Show manual instructions
+      alert('To ensure reliable alarms:\n\n1. Go to Settings > Battery\n2. Find "Battery Optimization"\n3. Select "HustleOS"\n4. Choose "Don\'t optimize"\n\nThis prevents Android from killing the app.');
+    }
+  }
+  
+  async wakeScreen(shouldWake) {
+    if (!this.isNative) return;
+    
+    try {
+      // Call native method to handle screen wake
+      if (window.Capacitor?.Plugins?.App) {
+        // For now, we'll handle this through the existing wake lock system
+        if (shouldWake) {
+          await this.keepScreenAwake();
+        }
+      }
+    } catch (error) {
+      console.log('Screen wake control failed:', error);
+    }
   }
 }
 

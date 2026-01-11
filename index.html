@@ -51,6 +51,64 @@
         }
         
         .cockpit { background: rgba(10,10,10,0.95); border: 1px solid #333; border-bottom: 2px solid var(--neon-green); padding: 20px; border-radius: 0 0 15px 15px; text-align: center; margin-bottom: 20px; position: relative; }
+        
+        /* Landscape cockpit layout */
+        @media (orientation: landscape) {
+            body {
+                display: grid;
+                grid-template-columns: 350px 1fr;
+                grid-template-rows: 1fr 60px;
+                gap: 20px;
+                padding: 10px;
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .cockpit {
+                grid-column: 1;
+                grid-row: 1;
+                margin-bottom: 0;
+                height: fit-content;
+            }
+            
+            .timeline-container {
+                grid-column: 2;
+                grid-row: 1;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 10px;
+                padding: 0;
+                margin-bottom: 0;
+                overflow-y: auto;
+            }
+            
+            .bottom-nav {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                position: static;
+                margin: 0;
+            }
+            
+            .fab-add {
+                bottom: 80px;
+                right: 20px;
+            }
+            
+            /* Hide detailed controls in landscape */
+            .landscape-hide {
+                display: none !important;
+            }
+            
+            /* Compact cockpit for landscape */
+            .cockpit .timer-display {
+                font-size: 2.5rem;
+            }
+            
+            .task-card {
+                margin-bottom: 0;
+                min-height: 70px;
+            }
+        }
         .current-mission { font-size: 1.4rem; font-weight: bold; text-transform: uppercase; margin: 10px 0; }
         .timer-display { font-size: 3.2rem; color: var(--neon-green); font-weight: bold; font-family: monospace; }
         .btn-main { background: transparent; border: 1px solid var(--neon-green); color: var(--neon-green); padding: 10px; width: 100%; font-weight: bold; cursor: pointer; text-transform: uppercase; }
@@ -59,6 +117,20 @@
         .timeline-container { flex: 1; overflow-y: auto; padding-bottom: 80px; }
         .task-card { background: rgba(20,20,20,0.6); border-left: 3px solid #333; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; position: relative; transition: 0.3s; }
         .task-card.active { border-left-color: var(--neon-green); background: linear-gradient(90deg, rgba(0,255,65,0.1), transparent); transform: scale(1.02); }
+        
+        /* Landscape layout for task cards */
+        @media (orientation: landscape) {
+            .timeline-container {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 10px;
+                padding: 10px;
+            }
+            .task-card {
+                margin-bottom: 0;
+                min-height: 80px;
+            }
+        }
         
         /* ACTION BUTTONS (EDIT & DELETE) */
         .card-actions { display: flex; gap: 10px; }
@@ -82,6 +154,75 @@
         .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; cursor: pointer; font-size: 0.7rem; }
         .nav-item.active { color: var(--neon-green); }
         .nav-icon { font-size: 1.2rem; margin-bottom: 2px; }
+        
+        /* Cockpit Stopwatch Styles */
+        .cockpit-stopwatch { 
+            background: rgba(10,10,10,0.95); 
+            border: 1px solid #333; 
+            border-bottom: 2px solid var(--neon-green); 
+            padding: 40px; 
+            margin: 20px; 
+            border-radius: 15px; 
+            text-align: center; 
+            position: relative;
+            background-image: linear-gradient(rgba(0,255,65,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,65,0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+        .stopwatch-header { 
+            position: absolute; 
+            top: 10px; 
+            left: 15px; 
+            font-size: 0.6rem; 
+            color: var(--neon-green); 
+            font-weight: bold;
+        }
+        .stopwatch-display-container { 
+            margin: 40px 0; 
+        }
+        .stopwatch-label { 
+            color: #888; 
+            font-size: 0.8rem; 
+            margin-bottom: 10px; 
+            font-weight: bold;
+        }
+        .stopwatch-timer { 
+            font-size: 4rem !important; 
+            color: var(--neon-green) !important; 
+            text-shadow: 0 0 20px rgba(0,255,65,0.5);
+        }
+        .stopwatch-controls { 
+            display: flex; 
+            gap: 20px; 
+            justify-content: center; 
+            margin-top: 30px;
+        }
+        .stopwatch-btn { 
+            padding: 15px 30px; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            cursor: pointer;
+        }
+        .btn-secondary { 
+            background: transparent; 
+            border: 1px solid var(--neon-red); 
+            color: var(--neon-red); 
+        }
+        .btn-secondary:hover { 
+            background: rgba(255,0,60,0.1);
+        }
+        .stopwatch-grid { 
+            position: absolute; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: 3px;
+        }
+        .grid-line { 
+            height: 1px; 
+            background: var(--neon-green); 
+            margin: 1px 0; 
+            opacity: 0.3;
+        }
     </style>
 </head>
 <body>
@@ -114,7 +255,21 @@
         <div style="position:absolute; top:10px; left:10px; font-size:0.6rem; color:#555;">SYS.V5.0 // ONLINE</div>
         <button onclick="resetTemplate()" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#555; cursor:pointer;">↺ RESET</button>
         
-        <div id="mini-task" class="mini-task-card" style="display:none; position:absolute; top:40px; right:10px; background:rgba(0,255,65,0.1); border:1px solid var(--neon-green); padding:6px; border-radius:3px; font-size:0.6rem; width:120px;">
+        <!-- Day Selector -->
+        <div class="day-selector" style="position:absolute; top:40px; left:10px; display:flex; gap:5px;">
+            <div style="color:#666; font-size:0.6rem; margin-right:5px;">DAY:</div>
+            <select id="daySelect" onchange="switchToDay(this.value)" style="background:#000; border:1px solid #333; color:#fff; padding:2px; font-size:0.6rem;">
+                <option value="Monday">MON</option>
+                <option value="Tuesday">TUE</option>
+                <option value="Wednesday">WED</option>
+                <option value="Thursday">THU</option>
+                <option value="Friday">FRI</option>
+                <option value="Saturday">SAT</option>
+                <option value="Sunday">SUN</option>
+            </select>
+        </div>
+        
+        <div id="mini-task" class="mini-task-card" style="display:none; position:absolute; top:40px; right:10px; background:#000; border:2px solid var(--neon-green); padding:8px; border-radius:3px; font-size:0.6rem; width:120px; box-shadow:0 0 10px rgba(0,255,65,0.3);">
             <div style="color:var(--neon-green); font-weight:bold; font-size:0.5rem;">PRIORITY</div>
             <div id="mini-task-title" style="font-size:0.6rem; margin:2px 0;">LOADING...</div>
             <div id="mini-task-timer" style="color:var(--neon-green); font-weight:bold; font-size:0.7rem;">00:00:00</div>
@@ -127,7 +282,7 @@
         <button id="main-btn" class="btn-main" onclick="handleSystemClick()">INITIALIZE SYSTEM</button>
         
         <!-- Alarm Sound Selector -->
-        <div style="margin-top:10px; display:flex; align-items:center; gap:10px;">
+        <div class="landscape-hide" style="margin-top:10px; display:flex; align-items:center; gap:10px;">
             <label style="color:#666; font-size:0.7rem;">ALARM:</label>
             <select id="alarmSelect" onchange="saveAlarmSound()" style="background:#000; border:1px solid #333; color:#fff; padding:5px; flex:1;">
                 <option value="classic">⏰ CLASSIC BELL</option>
@@ -148,7 +303,17 @@
             </select>
         </div>
         
-        <button onclick="testAlarm()" style="margin-top:10px; padding:5px; background:rgba(255,0,60,0.1); border:1px solid var(--neon-red); color:var(--neon-red); width:100%; cursor:pointer;">🚨 TEST ALARM</button>
+        <button class="landscape-hide" onclick="testAlarm()" style="margin-top:10px; padding:5px; background:rgba(255,0,60,0.1); border:1px solid var(--neon-red); color:var(--neon-red); width:100%; cursor:pointer;">🚨 TEST ALARM</button>
+        
+        <!-- Quick Alarm Section -->
+        <div class="landscape-hide" style="margin-top:15px; padding:10px; background:rgba(0,255,255,0.1); border:1px solid var(--neon-blue); border-radius:5px;">
+            <div style="color:var(--neon-blue); font-weight:bold; font-size:0.8rem; margin-bottom:10px;">⏰ QUICK ALARM</div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="time" id="quickAlarmTime" style="background:#000; border:1px solid #333; color:#fff; padding:5px; flex:1;">
+                <button onclick="setQuickAlarm()" style="background:var(--neon-blue); color:#000; border:none; padding:5px 10px; cursor:pointer; font-weight:bold;">SET</button>
+            </div>
+            <div id="quickAlarmsList" style="margin-top:10px;"></div>
+        </div>
     </div>
 
     <div class="timeline-container"></div>
@@ -173,21 +338,270 @@
     <script type="module" src="https://unpkg.com/@capacitor/core@6/dist/capacitor.js"></script>
     <script src="./native-integration.js"></script>
     <script>
-        // --- 1. THE TEMPLATE (Your Schedule) ---
-        const TEMPLATE_SCHEDULE = [
-            { id: 't1', title: 'WAKE & PRAY',   start: '06:00', end: '07:00' },
-            { id: 't2', title: 'TRANSIT',       start: '07:00', end: '08:00' },
-            { id: 't3', title: 'PRINT BUSINESS',start: '08:00', end: '16:00' },
-            { id: 't4', title: 'WORK', start: '16:00', end: '23:00' },
-            { id: 't5', title: 'TRANSIT HOME',  start: '23:00', end: '00:00' },
-            { id: 't6', title: 'ACADEMIC STUDY',start: '00:00', end: '01:30' },
-            { id: 't7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
-            { id: 't8', title: 'SLEEP (3HRS)',  start: '03:00', end: '06:00' }
-        ];
+        // --- INTELLIGENT SCHEDULES DATA STRUCTURE ---
+        const TEMPLATE_SCHEDULES = {
+            Monday: [
+                { id: 'm1', title: 'WAKE & PRAY', start: '06:00', end: '07:00' },
+                { id: 'm2', title: 'TRANSIT', start: '07:00', end: '08:00' },
+                { id: 'm3', title: 'PRINT BUSINESS', start: '08:00', end: '16:00' },
+                { id: 'm4', title: 'WORK', start: '16:00', end: '23:00' },
+                { id: 'm5', title: 'TRANSIT HOME', start: '23:00', end: '00:00' },
+                { id: 'm6', title: 'ACADEMIC STUDY', start: '00:00', end: '01:30' },
+                { id: 'm7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
+                { id: 'm8', title: 'SLEEP (3HRS)', start: '03:00', end: '06:00' }
+            ],
+            Tuesday: [
+                { id: 't1', title: 'WAKE & PRAY', start: '06:00', end: '07:00' },
+                { id: 't2', title: 'TRANSIT', start: '07:00', end: '08:00' },
+                { id: 't3', title: 'PRINT BUSINESS', start: '08:00', end: '16:00' },
+                { id: 't4', title: 'WORK', start: '16:00', end: '23:00' },
+                { id: 't5', title: 'TRANSIT HOME', start: '23:00', end: '00:00' },
+                { id: 't6', title: 'ACADEMIC STUDY', start: '00:00', end: '01:30' },
+                { id: 't7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
+                { id: 't8', title: 'SLEEP (3HRS)', start: '03:00', end: '06:00' }
+            ],
+            Wednesday: [
+                { id: 'w1', title: 'WAKE & PRAY', start: '06:00', end: '07:00' },
+                { id: 'w2', title: 'TRANSIT', start: '07:00', end: '08:00' },
+                { id: 'w3', title: 'PRINT BUSINESS', start: '08:00', end: '16:00' },
+                { id: 'w4', title: 'WORK', start: '16:00', end: '23:00' },
+                { id: 'w5', title: 'TRANSIT HOME', start: '23:00', end: '00:00' },
+                { id: 'w6', title: 'ACADEMIC STUDY', start: '00:00', end: '01:30' },
+                { id: 'w7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
+                { id: 'w8', title: 'SLEEP (3HRS)', start: '03:00', end: '06:00' }
+            ],
+            Thursday: [
+                { id: 'th1', title: 'WAKE & PRAY', start: '06:00', end: '07:00' },
+                { id: 'th2', title: 'TRANSIT', start: '07:00', end: '08:00' },
+                { id: 'th3', title: 'PRINT BUSINESS', start: '08:00', end: '16:00' },
+                { id: 'th4', title: 'WORK', start: '16:00', end: '23:00' },
+                { id: 'th5', title: 'TRANSIT HOME', start: '23:00', end: '00:00' },
+                { id: 'th6', title: 'ACADEMIC STUDY', start: '00:00', end: '01:30' },
+                { id: 'th7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
+                { id: 'th8', title: 'SLEEP (3HRS)', start: '03:00', end: '06:00' }
+            ],
+            Friday: [
+                { id: 'f1', title: 'WAKE & PRAY', start: '06:00', end: '07:00' },
+                { id: 'f2', title: 'TRANSIT', start: '07:00', end: '08:00' },
+                { id: 'f3', title: 'PRINT BUSINESS', start: '08:00', end: '16:00' },
+                { id: 'f4', title: 'WORK', start: '16:00', end: '23:00' },
+                { id: 'f5', title: 'TRANSIT HOME', start: '23:00', end: '00:00' },
+                { id: 'f6', title: 'ACADEMIC STUDY', start: '00:00', end: '01:30' },
+                { id: 'f7', title: 'TRADING & DEV', start: '01:30', end: '03:00' },
+                { id: 'f8', title: 'SLEEP (3HRS)', start: '03:00', end: '06:00' }
+            ],
+            Saturday: [
+                { id: 's1', title: 'WAKE & PRAY', start: '08:00', end: '09:00' },
+                { id: 's2', title: 'WEEKEND PROJECT', start: '09:00', end: '12:00' },
+                { id: 's3', title: 'FAMILY TIME', start: '12:00', end: '18:00' },
+                { id: 's4', title: 'PERSONAL DEV', start: '18:00', end: '22:00' },
+                { id: 's5', title: 'SLEEP', start: '22:00', end: '08:00' }
+            ],
+            Sunday: [
+                { id: 'su1', title: 'WAKE & PRAY', start: '08:00', end: '09:00' },
+                { id: 'su2', title: 'PLANNING', start: '09:00', end: '11:00' },
+                { id: 'su3', title: 'REST & REFLECT', start: '11:00', end: '15:00' },
+                { id: 'su4', title: 'PREP FOR WEEK', start: '15:00', end: '20:00' },
+                { id: 'su5', title: 'SLEEP', start: '20:00', end: '08:00' }
+            ]
+        };
 
-        // Load saved schedule OR use Template if empty
-        let schedule = JSON.parse(localStorage.getItem('userSchedule')) || TEMPLATE_SCHEDULE;
+        // Load saved schedules OR use Template
+        let schedules = JSON.parse(localStorage.getItem('userSchedules')) || TEMPLATE_SCHEDULES;
+        let currentDay = getCurrentDayName();
+        let selectedDay = currentDay; // For editing
+        let schedule = schedules[currentDay] || [];
+        
+        // Initialize pinned tasks and quick alarms
         let pinnedTasks = JSON.parse(localStorage.getItem('pinnedTasks')) || [];
+        let quickAlarms = JSON.parse(localStorage.getItem('quickAlarms')) || [];
+        
+        // Screen wake setting
+        let screenWakeEnabled = localStorage.getItem('screenWakeEnabled') !== 'false'; // Default true
+        
+        function getCurrentDayName() {
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            return days[new Date().getDay()];
+        }
+        
+        function switchToDay(dayName) {
+            selectedDay = dayName;
+            schedule = schedules[dayName] || [];
+            if (currentView === 'alarms') {
+                updateDisplay();
+            }
+        }
+        // --- GLOBAL ALARM SYSTEM (Runs regardless of tab) ---
+        window.globalAlarmSystem = {
+            armed: localStorage.getItem('systemArmed') === 'true' || false,
+            triggered: false,
+            
+            checkAlarms: async function() {
+                if (!this.armed) return;
+                
+                // Get current day's schedule
+                const today = getCurrentDayName();
+                const todaySchedule = schedules[today] || [];
+                
+                const tasks = this.findCurrentTask(todaySchedule);
+                const mainTask = tasks.main;
+                const miniTask = tasks.mini;
+                
+                // Check mini task first (priority)
+                if (miniTask) {
+                    const miniSec = this.getSecondsLeft(miniTask.end);
+                    if (miniSec <= 0 && miniSec > -10 && miniTask.title !== "IDLE MODE") {
+                        if (!this.triggered) {
+                            await this.triggerAlarm(miniTask.title);
+                        }
+                    }
+                } else {
+                    // Check main task
+                    const sec = this.getSecondsLeft(mainTask.end);
+                    if (sec <= 0 && sec > -10 && mainTask.title !== "IDLE MODE") {
+                        if (!this.triggered) {
+                            await this.triggerAlarm(mainTask.title);
+                        }
+                    }
+                }
+                
+                // Check quick alarms
+                await this.checkQuickAlarms();
+            },
+            
+            triggerAlarm: async function(taskTitle) {
+                console.log('🚨 GLOBAL ALARM TRIGGERED:', taskTitle);
+                this.triggered = true;
+                
+                // Play sound immediately (decoupled from notifications)
+                playSynthAlarm();
+                
+                // Visual effects
+                document.body.classList.add('red-alert-mode');
+                const btn = document.getElementById('main-btn');
+                if (btn) {
+                    btn.innerText = "⚠ SILENCE ALARM ⚠";
+                    btn.style.borderColor = "var(--neon-red)";
+                    btn.style.color = "var(--neon-red)";
+                }
+                
+                // Handle screen wake based on user setting
+                if (screenWakeEnabled && window.nativeIntegration) {
+                    await window.nativeIntegration.wakeScreen(true);
+                }
+                
+                // Send notification (don't wait for it)
+                setTimeout(() => {
+                    sendNotification('🚨 HUSTLE OS ALARM', `Task ended: ${taskTitle}`);
+                }, 100);
+            },
+            
+            silenceAlarm: function() {
+                this.triggered = false;
+                stopSynthAlarm();
+                document.body.classList.remove('red-alert-mode');
+                const btn = document.getElementById('main-btn');
+                if (btn) {
+                    btn.innerText = "SYSTEM ARMED";
+                    btn.style.color = "var(--neon-green)";
+                    btn.style.borderColor = "var(--neon-green)";
+                    btn.style.background = "rgba(0,255,65,0.1)";
+                }
+            },
+            
+            // Fixed midnight bug with proper 24-hour handling
+            getSecondsLeft: function(endStr) {
+                if (endStr === "00:00") return 0;
+                
+                const now = new Date();
+                const [h, m] = endStr.split(':').map(Number);
+                
+                // Create target time for today
+                let target = new Date(now);
+                target.setHours(h, m, 0, 0);
+                
+                // If target is in the past, it's tomorrow
+                if (target <= now) {
+                    target.setDate(target.getDate() + 1);
+                }
+                
+                return Math.floor((target - now) / 1000);
+            },
+            
+            findCurrentTask: function(daySchedule) {
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                let validCandidates = [];
+
+                for (let t of daySchedule) {
+                    let s = this.parseTime(t.start);
+                    let e = this.parseTime(t.end);
+                    
+                    // Handle midnight crossover (e.g., 23:00 to 01:00)
+                    if (e < s) {
+                        // Task crosses midnight
+                        if (currentMinutes >= s || currentMinutes < e) {
+                            validCandidates.push({ task: t, duration: (1440 - s) + e });
+                        }
+                    } else {
+                        // Normal task within same day
+                        if (currentMinutes >= s && currentMinutes < e) {
+                            validCandidates.push({ task: t, duration: e - s });
+                        }
+                    }
+                }
+
+                if (validCandidates.length === 0) {
+                    return { main: { title: "IDLE MODE", start: "00:00", end: "00:00" }, mini: null };
+                }
+
+                // Sort by duration (shortest first)
+                validCandidates.sort((a, b) => a.duration - b.duration);
+
+                if (validCandidates.length === 1) {
+                    return { main: validCandidates[0].task, mini: null };
+                } else {
+                    return { 
+                        mini: validCandidates[0].task, 
+                        main: validCandidates[validCandidates.length - 1].task 
+                    };
+                }
+            },
+            
+            parseTime: function(timeStr) {
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            },
+            
+            checkQuickAlarms: async function() {
+                const now = new Date();
+                const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
+                for (const alarm of quickAlarms) {
+                    if (alarm.time === currentTime && !this.triggered) {
+                        console.log('🚨 QUICK ALARM TRIGGERED:', alarm.label);
+                        await this.triggerAlarm('Quick Alarm');
+                        deleteQuickAlarm(alarm.id);
+                        break;
+                    }
+                }
+            }
+        };
+        
+        function togglePin(taskId) {
+            if (pinnedTasks.includes(taskId)) {
+                pinnedTasks = pinnedTasks.filter(id => id !== taskId);
+            } else {
+                pinnedTasks.push(taskId);
+            }
+            localStorage.setItem('pinnedTasks', JSON.stringify(pinnedTasks));
+            updateDisplay();
+        }
+        
+        // Start global alarm loop (runs every second regardless of tab)
+        setInterval(() => {
+            window.globalAlarmSystem.checkAlarms();
+        }, 1000);
         
         function togglePin(taskId) {
             if (pinnedTasks.includes(taskId)) {
@@ -233,6 +647,131 @@
             document.getElementById('stopwatch-display').innerText = '00:00:00';
             document.getElementById('stopwatch-btn').innerText = 'START';
         }
+        
+        // --- QUICK ALARMS ---
+        function setQuickAlarm() {
+            const timeInput = document.getElementById('quickAlarmTime');
+            const time = timeInput.value;
+            if (!time) return alert('Please select a time');
+            
+            const alarmId = 'qa_' + Date.now();
+            const alarm = {
+                id: alarmId,
+                time: time,
+                label: `Alarm at ${time}`
+            };
+            
+            quickAlarms.push(alarm);
+            localStorage.setItem('quickAlarms', JSON.stringify(quickAlarms));
+            timeInput.value = '';
+            updateQuickAlarmsList();
+        }
+        
+        function deleteQuickAlarm(id) {
+            quickAlarms = quickAlarms.filter(a => a.id !== id);
+            localStorage.setItem('quickAlarms', JSON.stringify(quickAlarms));
+            updateQuickAlarmsList();
+        }
+        
+        function updateQuickAlarmsList() {
+            const container = document.getElementById('quickAlarmsList');
+            if (!container) return;
+            
+            if (quickAlarms.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = quickAlarms.map(alarm => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:5px; background:rgba(0,0,0,0.3); margin:2px 0; border-radius:3px;">
+                    <span style="font-size:0.8rem;">🔔 ${alarm.time}</span>
+                    <button onclick="deleteQuickAlarm('${alarm.id}')" style="background:var(--neon-red); color:#000; border:none; padding:2px 6px; cursor:pointer; font-size:0.7rem;">×</button>
+                </div>
+            `).join('');
+        }
+        
+        async function checkQuickAlarms() {
+            const now = new Date();
+            const currentTime = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            
+            for (const alarm of quickAlarms) {
+                if (alarm.time === currentTime && systemArmed && !alarmTriggered) {
+                    console.log('🚨 QUICK ALARM TRIGGERED:', alarm.label);
+                    alarmTriggered = true;
+                    playSynthAlarm();
+                    
+                    // Visual effects
+                    document.body.classList.add('red-alert-mode');
+                    const btn = document.getElementById('main-btn');
+                    btn.innerText = "⚠ SILENCE ALARM ⚠";
+                    btn.style.borderColor = "var(--neon-red)";
+                    btn.style.color = "var(--neon-red)";
+                    
+                    // Send notification properly
+                    await sendNotification('🚨 QUICK ALARM', alarm.label);
+                    
+                    // Auto-remove the alarm after triggering
+                    deleteQuickAlarm(alarm.id);
+                    break; // Only trigger one alarm at a time
+                }
+            }
+        }
+        
+        // Settings page functions
+        function setQuickAlarmFromSettings() {
+            const timeInput = document.getElementById('settingsQuickAlarmTime');
+            const time = timeInput.value;
+            if (!time) return alert('Please select a time');
+            
+            const alarmId = 'qa_' + Date.now();
+            const alarm = { id: alarmId, time: time, label: `Alarm at ${time}` };
+            
+            quickAlarms.push(alarm);
+            localStorage.setItem('quickAlarms', JSON.stringify(quickAlarms));
+            timeInput.value = '';
+            updateSettingsQuickAlarmsList();
+            updateQuickAlarmsList();
+        }
+        
+        function updateSettingsQuickAlarmsList() {
+            const container = document.getElementById('settingsQuickAlarmsList');
+            if (!container) return;
+            
+            if (quickAlarms.length === 0) {
+                container.innerHTML = '<div style="color:#666; font-size:0.8rem;">No quick alarms set</div>';
+                return;
+            }
+            
+            container.innerHTML = quickAlarms.map(alarm => `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:rgba(0,0,0,0.3); margin:5px 0; border-radius:3px;">
+                    <span>🔔 ${alarm.time}</span>
+                    <button onclick="deleteQuickAlarm('${alarm.id}'); updateSettingsQuickAlarmsList();" style="background:var(--neon-red); color:#000; border:none; padding:4px 8px; cursor:pointer;">×</button>
+                </div>
+            `).join('');
+        }
+        
+        function saveAlarmSoundFromSettings() {
+            const select = document.getElementById('settingsAlarmSelect');
+            if (select) {
+                selectedAlarmSound = select.value;
+                localStorage.setItem('selectedAlarmSound', selectedAlarmSound);
+                
+                // Sync with main alarm selector if it exists
+                const mainSelect = document.getElementById('alarmSelect');
+                if (mainSelect) {
+                    mainSelect.value = selectedAlarmSound;
+                }
+            }
+        }
+        
+        function toggleScreenWake() {
+            screenWakeEnabled = !screenWakeEnabled;
+            localStorage.setItem('screenWakeEnabled', screenWakeEnabled);
+            const toggle = document.getElementById('screenWakeToggle');
+            if (toggle) {
+                toggle.checked = screenWakeEnabled;
+            }
+        }
 
         // --- NAVIGATION ---
         let currentView = 'alarms';
@@ -250,10 +789,23 @@
                 fab.style.display = 'flex';
             } else if (view === 'stopwatch') {
                 container.innerHTML = `
-                    <div style="text-align:center; padding:50px;">
-                        <div style="font-size:3rem; color:var(--neon-blue); margin:30px 0;" id="stopwatch-display">${formatStopwatchTime(stopwatchTime)}</div>
-                        <button onclick="startStopwatch()" id="stopwatch-btn" style="background:var(--neon-blue); color:#000; border:none; padding:15px 30px; margin:10px; font-weight:bold; cursor:pointer;">${stopwatchRunning ? 'PAUSE' : 'START'}</button>
-                        <button onclick="resetStopwatch()" style="background:transparent; border:1px solid var(--neon-red); color:var(--neon-red); padding:15px 30px; margin:10px; cursor:pointer;">RESET</button>
+                    <div class="cockpit-stopwatch">
+                        <div class="stopwatch-header">
+                            <div class="system-status">STOPWATCH MODULE // ACTIVE</div>
+                        </div>
+                        <div class="stopwatch-display-container">
+                            <div class="stopwatch-label">ELAPSED TIME</div>
+                            <div class="timer-display stopwatch-timer" id="stopwatch-display">${formatStopwatchTime(stopwatchTime)}</div>
+                        </div>
+                        <div class="stopwatch-controls">
+                            <button onclick="startStopwatch()" id="stopwatch-btn" class="btn-main stopwatch-btn">${stopwatchRunning ? 'PAUSE TIMER' : 'START TIMER'}</button>
+                            <button onclick="resetStopwatch()" class="btn-secondary stopwatch-btn">RESET TIMER</button>
+                        </div>
+                        <div class="stopwatch-grid">
+                            <div class="grid-line"></div>
+                            <div class="grid-line"></div>
+                            <div class="grid-line"></div>
+                        </div>
                     </div>
                 `;
                 fab.style.display = 'none';
@@ -262,25 +814,75 @@
                     <div style="padding:20px;">
                         <h3 style="color:var(--neon-blue); margin-bottom:20px;">SYSTEM SETTINGS</h3>
                         
+                        <div style="background:rgba(0,255,255,0.1); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-blue);">
+                            <div style="font-weight:bold; margin-bottom:10px;">⏰ QUICK ALARM</div>
+                            <div style="display:flex; gap:10px; align-items:center; margin-bottom:10px;">
+                                <input type="time" id="settingsQuickAlarmTime" style="background:#000; border:1px solid #333; color:#fff; padding:5px; flex:1;">
+                                <button onclick="setQuickAlarmFromSettings()" style="background:var(--neon-blue); color:#000; border:none; padding:5px 10px; cursor:pointer; font-weight:bold;">SET</button>
+                            </div>
+                            <div id="settingsQuickAlarmsList"></div>
+                        </div>
+                        
+                        <div style="background:rgba(0,255,65,0.1); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-green);">
+                            <div style="font-weight:bold; margin-bottom:10px;">🎵 ALARM SOUND</div>
+                            <select id="settingsAlarmSelect" onchange="saveAlarmSoundFromSettings()" style="background:#000; border:1px solid #333; color:#fff; padding:8px; width:100%; margin-bottom:10px;">
+                                <option value="classic">⏰ CLASSIC BELL</option>
+                                <option value="digital">📱 DIGITAL BEEP</option>
+                                <option value="rooster">🐓 ROOSTER</option>
+                                <option value="buzzer">⚡ BUZZER</option>
+                                <option value="gentle">🌅 GENTLE WAKE</option>
+                                <option value="urgent">🚨 URGENT</option>
+                                <option value="chimes">🎵 WIND CHIMES</option>
+                                <option value="radio">📻 RADIO STATIC</option>
+                                <option value="beeping">📢 FAST BEEPING</option>
+                                <option value="oldphone">☎️ OLD PHONE</option>
+                                <option value="siren">🚨 SIREN (ORIGINAL)</option>
+                                <option value="beep">📢 BEEP (ORIGINAL)</option>
+                                <option value="pulse">⚡ PULSE (ORIGINAL)</option>
+                                <option value="horn">📯 HORN (ORIGINAL)</option>
+                                <option value="chime">🔔 CHIME (ORIGINAL)</option>
+                            </select>
+                            <button onclick="testAlarm()" style="background:var(--neon-red); color:#000; border:none; padding:8px 15px; cursor:pointer; width:100%;">TEST ALARM</button>
+                        </div>
+                        
+                        <div style="background:rgba(255,0,60,0.1); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-red);">
+                            <div style="font-weight:bold; margin-bottom:10px;">📱 SCREEN WAKE</div>
+                            <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Turn on screen when alarm rings (uses more battery)</div>
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                                <input type="checkbox" id="screenWakeToggle" onchange="toggleScreenWake()" style="transform:scale(1.5);">
+                                <span>Wake screen on alarm</span>
+                            </label>
+                        </div>
+                        
                         <div style="background:rgba(20,20,20,0.6); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-green);">
                             <div style="font-weight:bold; margin-bottom:10px;">🔋 BATTERY OPTIMIZATION</div>
                             <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Disable battery optimization to ensure reliable alarms</div>
                             <button onclick="window.nativeIntegration?.requestBatteryOptimizationWhitelist()" style="background:var(--neon-green); color:#000; border:none; padding:10px 20px; cursor:pointer;">CHECK SETTINGS</button>
                         </div>
                         
-                        <div style="background:rgba(20,20,20,0.6); padding:15px; margin-bottom:15px; border-left:3px solid var(--neon-blue);">
+                        <div style="background:rgba(20,20,20,0.6); padding:15px; border-left:3px solid var(--neon-blue);">
                             <div style="font-weight:bold; margin-bottom:10px;">📱 PERMISSIONS</div>
                             <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Grant all permissions for full functionality</div>
                             <button onclick="window.nativeIntegration?.requestPermissions()" style="background:var(--neon-blue); color:#000; border:none; padding:10px 20px; cursor:pointer;">REQUEST PERMISSIONS</button>
                         </div>
-                        
-                        <div style="background:rgba(20,20,20,0.6); padding:15px; border-left:3px solid var(--neon-red);">
-                            <div style="font-weight:bold; margin-bottom:10px;">🚨 ALARM TEST</div>
-                            <div style="color:#888; font-size:0.8rem; margin-bottom:10px;">Test system alarm functionality</div>
-                            <button onclick="testAlarm()" style="background:var(--neon-red); color:#000; border:none; padding:10px 20px; cursor:pointer;">TEST ALARM</button>
-                        </div>
                     </div>
                 `;
+                
+                // Sync alarm selector with current setting
+                const settingsSelect = document.getElementById('settingsAlarmSelect');
+                if (settingsSelect) {
+                    settingsSelect.value = selectedAlarmSound;
+                }
+                
+                // Sync screen wake toggle
+                const screenWakeToggle = document.getElementById('screenWakeToggle');
+                if (screenWakeToggle) {
+                    screenWakeToggle.checked = screenWakeEnabled;
+                }
+                
+                // Update quick alarms list in settings
+                updateSettingsQuickAlarmsList();
+                
                 fab.style.display = 'none';
             }
         }
@@ -331,10 +933,12 @@
                 schedule.push({ id: 'task_' + Date.now(), title, start, end });
             }
 
-            // Sort list by time so overlaps are minimized
-            schedule.sort((a,b) => parseTime(a.start) - parseTime(b.start));
+            // Sort list by time
+            schedule.sort((a,b) => window.globalAlarmSystem.parseTime(a.start) - window.globalAlarmSystem.parseTime(b.start));
 
-            localStorage.setItem('userSchedule', JSON.stringify(schedule));
+            // Save to day-specific schedule
+            schedules[selectedDay] = schedule;
+            localStorage.setItem('userSchedules', JSON.stringify(schedules));
             closeModal();
             updateDisplay();
         }  
@@ -342,15 +946,17 @@
         function deleteTask(id) {
             if(confirm("DELETE MISSION?")) {
                 schedule = schedule.filter(t => t.id !== id);
-                localStorage.setItem('userSchedule', JSON.stringify(schedule));
+                schedules[selectedDay] = schedule;
+                localStorage.setItem('userSchedules', JSON.stringify(schedules));
                 updateDisplay();
             }
         }
 
         function resetTemplate() {
-            if(confirm("RESET TO FACTORY SETTINGS? This will erase custom tasks.")) {
-                schedule = JSON.parse(JSON.stringify(TEMPLATE_SCHEDULE)); // Deep copy
-                localStorage.setItem('userSchedule', JSON.stringify(schedule));
+            if(confirm("RESET TO FACTORY SETTINGS? This will erase custom schedules for all days.")) {
+                schedules = JSON.parse(JSON.stringify(TEMPLATE_SCHEDULES));
+                schedule = schedules[selectedDay];
+                localStorage.setItem('userSchedules', JSON.stringify(schedules));
                 updateDisplay();
             }
         }
@@ -386,6 +992,15 @@
         function createAlarmSound(type) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             
+            // Force alarm audio stream (override silent/DND modes)
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: '🚨 HUSTLE OS ALARM',
+                    artist: 'System Alert',
+                    album: 'Critical Notifications'
+                });
+            }
+            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             gain.gain.value = 0.4;
@@ -402,8 +1017,11 @@
                     bellGain.gain.value = 0.3;
                     bellLfo.connect(bellGain);
                     bellGain.connect(gain.gain);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
                     bellLfo.start();
-                    break;
+                    return { osc, gain, bellLfo };
                     
                 case 'digital': // Digital alarm beep
                     osc.type = 'square';
@@ -439,8 +1057,11 @@
                     buzzerGain.gain.value = 0.4;
                     buzzerLfo.connect(buzzerGain);
                     buzzerGain.connect(gain.gain);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
                     buzzerLfo.start();
-                    break;
+                    return { osc, gain, buzzerLfo };
                     
                 case 'gentle': // Gentle wake up tone
                     osc.type = 'sine';
@@ -460,8 +1081,11 @@
                     urgentGain.gain.value = 300;
                     urgentLfo.connect(urgentGain);
                     urgentGain.connect(osc.frequency);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
                     urgentLfo.start();
-                    break;
+                    return { osc, gain, urgentLfo };
                     
                 case 'chimes': // Wind chimes
                     osc.type = 'sine';
@@ -474,11 +1098,14 @@
                         currentFreq = (currentFreq + 1) % frequencies.length;
                         osc.frequency.setValueAtTime(frequencies[currentFreq], audioCtx.currentTime);
                     };
-                    setInterval(changeFreq, 800);
+                    const interval = setInterval(changeFreq, 800);
                     
                     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.1, audioCtx.currentTime + 0.5);
-                    break;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    return { osc, gain, interval };
                     
                 case 'radio': // Radio static/tuning
                     osc.type = 'sawtooth';
@@ -490,7 +1117,6 @@
                     radioGain.gain.value = 200;
                     radioLfo.connect(radioGain);
                     radioGain.connect(osc.frequency);
-                    radioLfo.start();
                     
                     // Add some noise
                     const noise = audioCtx.createBufferSource();
@@ -502,8 +1128,13 @@
                     noise.buffer = buffer;
                     noise.loop = true;
                     noise.connect(gain);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    radioLfo.start();
                     noise.start();
-                    break;
+                    return { osc, gain, radioLfo, noise };
                     
                 case 'beeping': // Fast beeping pattern
                     osc.type = 'square';
@@ -525,22 +1156,30 @@
                     phoneGain.gain.value = 0.5;
                     phoneLfo.connect(phoneGain);
                     phoneGain.connect(gain.gain);
-                    phoneLfo.start();
                     
                     // Add second tone for classic phone ring
                     const osc2 = audioCtx.createOscillator();
                     osc2.type = 'sine';
                     osc2.frequency.value = 480;
                     osc2.connect(gain);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
                     osc2.start();
-                    break;
+                    phoneLfo.start();
+                    return { osc, gain, phoneLfo, osc2 };
                     
                 case 'siren': // Original siren
                     osc.type = 'sawtooth'; osc.frequency.value = 600;
                     const lfo = audioCtx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 4;
                     const lfoGain = audioCtx.createGain(); lfoGain.gain.value = 200;
-                    lfo.connect(lfoGain); lfoGain.connect(osc.frequency); lfo.start();
-                    break;
+                    lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    lfo.start();
+                    return { osc, gain, lfo };
                 case 'beep': // Original fast beeping
                     osc.type = 'square'; osc.frequency.value = 800;
                     gain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -553,8 +1192,12 @@
                     osc.type = 'triangle'; osc.frequency.value = 440;
                     const pulseLfo = audioCtx.createOscillator(); pulseLfo.type = 'square'; pulseLfo.frequency.value = 8;
                     const pulseGain = audioCtx.createGain(); pulseGain.gain.value = 0.3;
-                    pulseLfo.connect(pulseGain); pulseGain.connect(gain.gain); pulseLfo.start();
-                    break;
+                    pulseLfo.connect(pulseGain); pulseGain.connect(gain.gain);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    pulseLfo.start();
+                    return { osc, gain, pulseLfo };
                 case 'horn': // Original air horn style
                     osc.type = 'sawtooth'; osc.frequency.value = 300;
                     osc.frequency.setValueAtTime(300, audioCtx.currentTime);
@@ -584,14 +1227,55 @@
         
         function stopSynthAlarm() { 
             if(currentAlarm) { 
-                currentAlarm.osc.stop(); 
+                // Stop main oscillator
+                try {
+                    currentAlarm.osc.stop(); 
+                } catch(e) {}
+                
+                // Stop any additional oscillators or sources
+                if(currentAlarm.osc2) {
+                    try { currentAlarm.osc2.stop(); } catch(e) {}
+                }
+                if(currentAlarm.lfo) {
+                    try { currentAlarm.lfo.stop(); } catch(e) {}
+                }
+                if(currentAlarm.noise) {
+                    try { currentAlarm.noise.stop(); } catch(e) {}
+                }
+                if(currentAlarm.bellLfo) {
+                    try { currentAlarm.bellLfo.stop(); } catch(e) {}
+                }
+                if(currentAlarm.buzzerLfo) {
+                    try { currentAlarm.buzzerLfo.stop(); } catch(e) {}
+                }
+                if(currentAlarm.urgentLfo) {
+                    try { currentAlarm.urgentLfo.stop(); } catch(e) {}
+                }
+                if(currentAlarm.radioLfo) {
+                    try { currentAlarm.radioLfo.stop(); } catch(e) {}
+                }
+                if(currentAlarm.phoneLfo) {
+                    try { currentAlarm.phoneLfo.stop(); } catch(e) {}
+                }
+                if(currentAlarm.pulseLfo) {
+                    try { currentAlarm.pulseLfo.stop(); } catch(e) {}
+                }
+                
+                // Clear any intervals
+                if(currentAlarm.interval) {
+                    clearInterval(currentAlarm.interval);
+                }
+                
                 currentAlarm = null; 
             } 
         }
 
         // --- 4. CORE ENGINE ---
-        let systemArmed = localStorage.getItem('systemArmed') === 'true' || false, alarmTriggered = false;
         let wakeLock = null;
+        
+        // Initialize system state from global alarm system
+        const systemArmed = window.globalAlarmSystem.armed;
+        const alarmTriggered = window.globalAlarmSystem.triggered;
         
         // Request notification permission on page load
         if ('Notification' in window) {
@@ -603,61 +1287,95 @@
             console.log('Current notification permission:', Notification.permission);
         }
         
-        // Test alarm function
-        function testAlarm() {
-            console.log('🚨 Testing alarm system...');
-            console.log('System armed:', systemArmed);
-            console.log('Alarm triggered:', alarmTriggered);
+        // Enhanced notification function for mobile
+        async function sendNotification(title, body) {
+            console.log('🔔 Attempting notification:', title, body);
             
-            if(!systemArmed) {
+            // Try multiple notification methods aggressively
+            let success = false;
+            
+            // Method 1: Native notification first
+            if (window.nativeIntegration && window.nativeIntegration.isNative) {
+                try {
+                    console.log('📱 Trying native notification...');
+                    success = await window.nativeIntegration.sendSystemAlarm(title, body);
+                    if (success) {
+                        console.log('✅ Native notification sent');
+                        return true;
+                    }
+                } catch (e) {
+                    console.log('❌ Native notification failed:', e);
+                }
+            }
+            
+            // Method 2: Web notification with aggressive permission request
+            if ('Notification' in window) {
+                if (Notification.permission !== 'granted') {
+                    console.log('📱 Requesting notification permission...');
+                    const permission = await Notification.requestPermission();
+                    console.log('📱 Permission result:', permission);
+                }
+                
+                if (Notification.permission === 'granted') {
+                    try {
+                        console.log('🌐 Creating web notification...');
+                        const notification = new Notification(title, {
+                            body,
+                            icon: './favicon-32x32.png',
+                            tag: 'hustle-alarm-' + Date.now(),
+                            requireInteraction: true,
+                            vibrate: [1000, 500, 1000, 500, 1000],
+                            silent: false,
+                            renotify: true,
+                            badge: './favicon-32x32.png',
+                            timestamp: Date.now(),
+                            actions: [{
+                                action: 'silence',
+                                title: 'Silence Alarm'
+                            }]
+                        });
+                        
+                        notification.onclick = () => {
+                            window.focus();
+                            notification.close();
+                        };
+                        
+                        console.log('✅ Web notification created');
+                        success = true;
+                    } catch (e) {
+                        console.log('❌ Web notification failed:', e);
+                    }
+                }
+            }
+            
+            // Method 3: Force browser alert as last resort
+            if (!success) {
+                console.log('⚠️ All notifications failed, showing alert');
+                setTimeout(() => {
+                    alert(`🚨 ${title}\n${body}`);
+                }, 500);
+            }
+            
+            return success;
+        }
+        
+        async function testAlarm() {
+            console.log('🚨 Testing alarm system...');
+            console.log('System armed:', window.globalAlarmSystem.armed);
+            console.log('Alarm triggered:', window.globalAlarmSystem.triggered);
+            
+            if(!window.globalAlarmSystem.armed) {
                 alert('Please arm the system first by clicking INITIALIZE SYSTEM');
                 return;
             }
             
-            if(alarmTriggered) {
+            if(window.globalAlarmSystem.triggered) {
                 alert('Alarm already active! Please silence it first.');
                 return;
             }
             
-            // Force trigger alarm
-            alarmTriggered = true;
-            playSynthAlarm();
-            
-            // Visual effects FIRST (before notification)
-            document.body.classList.add('red-alert-mode');
-            const btn = document.getElementById('main-btn');
-            btn.innerText = "⚠ SILENCE ALARM ⚠";
-            btn.style.borderColor = "var(--neon-red)"; 
-            btn.style.color = "var(--neon-red)";
-            
-            // Test notification (mobile-optimized)
-            try {
-                if ('Notification' in window) {
-                    if (Notification.permission === 'granted') {
-                        new Notification('🚨 HUSTLE OS TEST ALARM', {
-                            body: 'This is a test alarm notification',
-                            icon: './favicon-32x32.png',
-                            tag: 'hustle-test',
-                            requireInteraction: true,
-                            vibrate: [200, 100, 200, 100, 200]
-                        });
-                    } else if (Notification.permission === 'default') {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === 'granted') {
-                                new Notification('🚨 HUSTLE OS TEST ALARM', {
-                                    body: 'This is a test alarm notification',
-                                    icon: './favicon-32x32.png',
-                                    tag: 'hustle-test',
-                                    requireInteraction: true,
-                                    vibrate: [200, 100, 200, 100, 200]
-                                });
-                            }
-                        });
-                    }
-                }
-            } catch(e) {
-                console.log('Notification error:', e);
-            }
+            // Force trigger alarm using global system
+            await window.globalAlarmSystem.triggerAlarm('TEST ALARM');
         }
 
         function parseTime(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
@@ -717,9 +1435,9 @@
         }
 
         async function handleSystemClick() {
-            if(!systemArmed) {
+            if (!window.globalAlarmSystem.armed) {
                 audioCtx.resume().then(() => { keepAudioAlive(); });
-                systemArmed = true;
+                window.globalAlarmSystem.armed = true;
                 localStorage.setItem('systemArmed', 'true');
                 document.getElementById('main-btn').innerText = "SYSTEM ARMED";
                 document.getElementById('main-btn').style.background = "rgba(0,255,65,0.1)";
@@ -728,6 +1446,16 @@
                 await window.nativeIntegration.initialize();
                 await window.nativeIntegration.keepScreenAwake();
                 
+                // Enhanced screen wake lock
+                try {
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                        console.log('Screen wake lock activated');
+                    }
+                } catch (err) {
+                    console.log('Wake lock failed:', err);
+                }
+                
                 // Check battery optimization
                 const isOptimized = await window.nativeIntegration.checkBatteryOptimization();
                 if (!isOptimized) {
@@ -735,15 +1463,8 @@
                         await window.nativeIntegration.requestBatteryOptimizationWhitelist();
                     }
                 }
-            } else if(alarmTriggered) {
-                stopSynthAlarm(); 
-                alarmTriggered = false;
-                document.body.classList.remove('red-alert-mode');
-                const btn = document.getElementById('main-btn');
-                btn.innerText = "SYSTEM ARMED";
-                btn.style.color = "var(--neon-green)";
-                btn.style.borderColor = "var(--neon-green)";
-                btn.style.background = "rgba(0,255,65,0.1)";
+            } else if (window.globalAlarmSystem.triggered) {
+                window.globalAlarmSystem.silenceAlarm();
             }
         }
 
@@ -751,74 +1472,34 @@
             // Only update if we're on the alarms view
             if (currentView !== 'alarms') return;
             
-            const tasks = findCurrentTask();
+            // Update day selector
+            const daySelect = document.getElementById('daySelect');
+            if (daySelect) {
+                daySelect.value = selectedDay;
+            }
+            
+            // Get tasks for selected day
+            const tasks = window.globalAlarmSystem.findCurrentTask(schedule);
             const mainTask = tasks.main;
             const miniTask = tasks.mini;
             
             // Update main task display
-            const sec = getSecondsLeft(mainTask.end);
+            const sec = window.globalAlarmSystem.getSecondsLeft(mainTask.end);
             document.querySelector('.current-mission').innerText = mainTask.title;
             const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
             document.querySelector('.timer-display').innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-
+            
             // Update mini task display
             const miniCard = document.getElementById('mini-task');
             if(miniTask) {
-                const miniSec = getSecondsLeft(miniTask.end);
+                const miniSec = window.globalAlarmSystem.getSecondsLeft(miniTask.end);
                 const miniH = Math.floor(miniSec/3600), miniM = Math.floor((miniSec%3600)/60), miniS = miniSec%60;
                 
                 document.getElementById('mini-task-title').innerText = miniTask.title;
                 document.getElementById('mini-task-timer').innerText = `${String(miniH).padStart(2,'0')}:${String(miniM).padStart(2,'0')}:${String(miniS).padStart(2,'0')}`;
                 miniCard.style.display = 'block';
-                
-                // Use mini task for alarm logic
-                if(miniSec <= 0 && miniSec > -10 && miniTask.title !== "IDLE MODE") {
-                    if(systemArmed && !alarmTriggered) {
-                        console.log('🚨 ALARM TRIGGERED for mini task:', miniTask.title);
-                        alarmTriggered = true; 
-                        playSynthAlarm();
-                        
-                        // Visual effects FIRST (critical for mobile)
-                        document.body.classList.add('red-alert-mode');
-                        const btn = document.getElementById('main-btn');
-                        btn.innerText = "⚠ SILENCE ALARM ⚠";
-                        btn.style.borderColor = "var(--neon-red)"; 
-                        btn.style.color = "var(--neon-red)";
-                        
-                        // Send native system alarm
-                        if (window.nativeIntegration) {
-                            await window.nativeIntegration.sendSystemAlarm(
-                                '🚨 HUSTLE OS ALARM', 
-                                `Task ended: ${miniTask.title}`
-                            );
-                        }
-                    }
-                }
             } else {
                 miniCard.style.display = 'none';
-                
-                // Use main task for alarm logic when no mini task
-                if(sec <= 0 && sec > -10 && mainTask.title !== "IDLE MODE") {
-                    if(systemArmed && !alarmTriggered) {
-                        alarmTriggered = true; 
-                        playSynthAlarm();
-                        
-                        // Visual effects FIRST (critical for mobile)
-                        document.body.classList.add('red-alert-mode');
-                        const btn = document.getElementById('main-btn');
-                        btn.innerText = "⚠ SILENCE ALARM ⚠";
-                        btn.style.borderColor = "var(--neon-red)"; 
-                        btn.style.color = "var(--neon-red)";
-                        
-                        // Send native system alarm
-                        if (window.nativeIntegration) {
-                            await window.nativeIntegration.sendSystemAlarm(
-                                '🚨 HUSTLE OS ALARM', 
-                                `Task ended: ${mainTask.title}`
-                            );
-                        }
-                    }
-                }
             }
 
             // RENDER LIST (Sort pinned tasks first)
@@ -830,7 +1511,7 @@
                 const bPinned = pinnedTasks.includes(b.id);
                 if (aPinned && !bPinned) return -1;
                 if (!aPinned && bPinned) return 1;
-                return parseTime(a.start) - parseTime(b.start);
+                return window.globalAlarmSystem.parseTime(a.start) - window.globalAlarmSystem.parseTime(b.start);
             });
             
             sortedSchedule.forEach(t => {
@@ -857,11 +1538,28 @@
 
         setInterval(updateDisplay, 1000);
         updateDisplay();
+        updateQuickAlarmsList();
+        
+        // Keep screen awake when system is armed
+        document.addEventListener('visibilitychange', async () => {
+            if (systemArmed && document.visibilityState === 'visible') {
+                try {
+                    if ('wakeLock' in navigator && !wakeLock) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    }
+                } catch (err) {
+                    console.log('Wake lock reactivation failed:', err);
+                }
+            }
+        });
         
         // Initialize button state on page load
-        if(systemArmed) {
-            document.getElementById('main-btn').innerText = "SYSTEM ARMED";
-            document.getElementById('main-btn').style.background = "rgba(0,255,65,0.1)";
+        if(window.globalAlarmSystem.armed) {
+            const btn = document.getElementById('main-btn');
+            if (btn) {
+                btn.innerText = "SYSTEM ARMED";
+                btn.style.background = "rgba(0,255,65,0.1)";
+            }
         }
         
         // Register service worker for PWA with auto-update
